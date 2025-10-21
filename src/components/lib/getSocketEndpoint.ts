@@ -1,21 +1,29 @@
 /**
  * Returns the WebSocket endpoint for all front-end connections.
- * Always prefers Cloudflare tunnel, with localStorage override for testing.
+ * Priority:
+ * 1️⃣ sessionStorage override (highest, for temporary testing)
+ * 2️⃣ localStorage override (optional, for manual dev)
+ * 3️⃣ Cloudflare tunnel (preferred default)
+ * 4️⃣ Hardcoded fallback URL
  */
 
 export function getSocketEndpoint(): string {
-  // 1️⃣ Manual override (for debugging different tunnels)
   if (typeof window !== "undefined") {
-   // const manual = window.localStorage.getItem("ws_endpoint");
-   // if (manual && manual.trim()) return manual;
+    // Session storage wins if set
+    const session = window.sessionStorage.getItem("ws_endpoint");
+    if (session && session.trim()) return normalizeToWs(session);
+
+    // Optional: localStorage override (if still needed)
+    //const manual = window.localStorage.getItem("ws_endpoint");
+    //if (manual && manual.trim()) return normalizeToWs(manual);
   }
 
-  //  Always prefer configured Cloudflare tunnel
+  // nvironment variable tunnel
   const tunnel = (import.meta as any)?.env?.VITE_TUNNEL_URL as string | undefined;
   if (tunnel && tunnel.trim()) return normalizeToWs(tunnel);
 
-  // 3️⃣ Safe default if no tunnel injected
-  return "wss://copyrights-double-plugin-cow.trycloudflare.com";
+  // 4´Final fallback
+  return "wss://temp-v558fr.ktulhu.com";
 }
 
 /** Convert http/https → ws/wss */

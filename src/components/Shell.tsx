@@ -7,14 +7,30 @@ export const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   const location = useLocation();
   const [endpoint, setEndpoint] = useState(getSocketEndpoint());
 
-  // allow runtime swap
+  /**
+   * Allow runtime swap of WebSocket endpoint
+   * - Stores new value in sessionStorage (preferred)
+   * - Falls back to localStorage if sessionStorage fails
+   * - Forces a reload so hooks reconnect using the new endpoint
+   */
   const handleSwap = () => {
-    const current = localStorage.getItem("ws_endpoint");
+    const current =
+      sessionStorage.getItem("ws_endpoint") ||
+      localStorage.getItem("ws_endpoint") ||
+      endpoint;
+
     const next = prompt("Enter WebSocket endpoint:", current || endpoint);
+
     if (next) {
-      localStorage.setItem("ws_endpoint", next);
+      try {
+        sessionStorage.setItem("ws_endpoint", next);
+      } catch {
+        // fallback if sessionStorage is unavailable (rare)
+        localStorage.setItem("ws_endpoint", next);
+      }
+
       setEndpoint(next);
-      window.location.reload(); // easiest way to re-init hook
+      window.location.reload();
     }
   };
 
@@ -77,18 +93,22 @@ export const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                 </Link>
               ))}
 
-              <button
-                onClick={handleSwap}
-                className={`
-                  ml-4 px-2 py-1 rounded text-xs border transition 
-                  border-btn-outline-border text-btn-outline-text 
-                  hover:bg-btn-outline-bg-hover 
-                  dark:border-btn-outline-border-dark dark:text-btn-outline-text-dark dark:hover:bg-btn-outline-bg-hover-dark
-                `}
-              >
-                WS: {endpoint.replace(/^wss?:\/\//, "").slice(0, 18)}…
-              </button>
+              {/* WebSocket switcher button */}
+<button
+  onClick={handleSwap}
+  className={`
+    ml-4 px-2 py-1 rounded text-xs border font-mono transition 
+    border-btn-outline-border 
+    text-gray-800 bg-white hover:bg-gray-100
+    dark:text-gray-100 dark:bg-slate-800 dark:hover:bg-slate-700
+  `}
+  title={endpoint}
+>
+  WS: {endpoint.replace(/^wss?:\/\//, "").slice(0, 22)}…
+</button>
 
+
+              {/* Dark mode toggle */}
               <button
                 onClick={toggleTheme}
                 className={`

@@ -1,64 +1,67 @@
-import React from "react";
+import React, { forwardRef } from "react";
+import clsx from "clsx"; // optional helper if you like cleaner className joining
 
-export const Card: React.FC<{ children: React.ReactNode; className?: string }> = ({
-  children,
-  className = "",
-}) => {
-  return (
+// ---------- CARD CONTAINER ----------
+export const Card = forwardRef<HTMLDivElement, { children: React.ReactNode; className?: string }>(
+  ({ children, className = "" }, ref) => (
     <div
-      className={`
-        rounded-2xl shadow-sm border 
-        bg-card-bg border-card-border 
-        dark:bg-card-bg-dark dark:border-card-border-dark 
-        ${className}
-      `}
+      ref={ref}
+      className={clsx(
+        "rounded-2xl shadow-sm border",
+        "bg-card-bg border-card-border",
+        "dark:bg-card-bg-dark dark:border-card-border-dark",
+        className
+      )}
     >
       {children}
     </div>
-  );
-};
+  )
+);
+Card.displayName = "Card";
 
+// ---------- CARD HEADER ----------
 export const CardHeader: React.FC<{ title: string; subtitle?: string }> = ({
   title,
   subtitle,
-}) => {
-  return (
-    <div
-      className={`
-        px-4 py-3 border-b 
-        border-card-divider 
-        dark:border-card-divider-dark
-      `}
-    >
-      <h2
-        className={`
-          text-lg font-semibold text-card-title 
-          dark:text-card-title-dark
-        `}
-      >
-        {title}
-      </h2>
-      {subtitle && (
-        <p
-          className={`
-            text-sm mt-1 text-card-subtitle 
-            dark:text-card-subtitle-dark
-          `}
-        >
-          {subtitle}
-        </p>
+}) => (
+  <div
+    className={clsx(
+      "px-4 py-3 border-b",
+      "border-card-divider dark:border-card-divider-dark"
+    )}
+  >
+    <h2
+      className={clsx(
+        "text-lg font-semibold text-card-title dark:text-card-title-dark"
       )}
-    </div>
-  );
-};
+    >
+      {title}
+    </h2>
+    {subtitle && (
+      <p
+        className={clsx(
+          "text-sm mt-1 text-card-subtitle dark:text-card-subtitle-dark"
+        )}
+      >
+        {subtitle}
+      </p>
+    )}
+  </div>
+);
 
-export const CardBody: React.FC<{ children: React.ReactNode; className?: string }> = ({
-  children,
-  className = "",
-}) => {
-  return (
-    <div className={`px-4 py-3 text-card-text dark:text-card-text-dark ${className}`}>
-      {children}
-    </div>
-  );
-};
+// ---------- CARD BODY ----------
+export const CardBody = forwardRef<
+  HTMLDivElement,
+  { children: React.ReactNode; className?: string }
+>(({ children, className = "" }, ref) => (
+  <div
+    ref={ref}
+    className={clsx(
+      "px-4 py-3 text-card-text dark:text-card-text-dark",
+      className
+    )}
+  >
+    {children}
+  </div>
+));
+CardBody.displayName = "CardBody";

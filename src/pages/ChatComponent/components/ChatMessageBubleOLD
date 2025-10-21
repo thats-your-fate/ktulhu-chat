@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React, { useEffect, Suspense } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -7,7 +7,7 @@ const LazySyntaxHighlighter = React.lazy(() =>
   import("react-syntax-highlighter").then(mod => ({ default: mod.Prism }))
 );
 // ✅ correct ESM import
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { oneDark } from "react-syntax-shighlighter/dist/esm/styles/prism";
 
 
 interface MessageBubbleProps {
@@ -15,7 +15,12 @@ interface MessageBubbleProps {
   content: string;
 }
 
+
+
+
 export const MessageBubble: React.FC<MessageBubbleProps> = React.memo(
+
+    
   ({ role, content }) => {
     // ✅ Skip markdown overhead if there's no code at all
     const containsCode = content.includes("`");

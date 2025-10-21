@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { Container } from "../../components/ui/Container";
 import { Card, CardHeader, CardBody } from "../../components/ui/Card";
@@ -26,7 +26,7 @@ export default function ChatComponent() {
     scrollRef.current?.scrollTo({ top: 999999, behavior: "smooth" });
   }, [history.length, history[history.length - 1]?.content]);
 
-  // WS handlers
+  // WebSocket handlers
   useEffect(() => {
     let currentAssistantId: string | null = null;
     setHandlers({
@@ -64,12 +64,16 @@ export default function ChatComponent() {
 
   return (
     <Container>
-      <ChatHeader status={status} lastError={lastError} />
+      {/* 👇 Convert null → undefined for TS safety */}
+      <ChatHeader status={status} lastError={lastError ?? undefined} />
+
       <Card>
         <CardHeader title="Chat" subtitle="Enter to send • Shift+Enter for newline" />
+
         <CardBody className="h-[65vh] overflow-y-auto" ref={scrollRef as any}>
           <MessageList history={history} />
         </CardBody>
+
         <CardBody className="border-t border-gray-100">
           <ChatInput
             input={input}
@@ -80,7 +84,7 @@ export default function ChatComponent() {
             clear={clear}
           />
           <div className="text-xs text-gray-500 mt-2">
-            Endpoint: {endpoint} • Model: {model}
+            Endpoint: {endpoint ?? "unknown"} • Model: {model}
           </div>
         </CardBody>
       </Card>
