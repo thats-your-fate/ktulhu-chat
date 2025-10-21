@@ -1,9 +1,23 @@
 
+@import "highlight.js/styles/github-dark.css";
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+
+
+.hljs {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+.hljs-keyword {
+  color: #f472b6;
+}
+.hljs-string {
+  color: #a7f3d0;
+}
+/* etc. */
 
 
 

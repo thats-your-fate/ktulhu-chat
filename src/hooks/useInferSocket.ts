@@ -8,39 +8,56 @@ export function useInferSocket(endpoint: string) {
   const [status, setStatus] = useState<WSStatus>("idle");
   const [lastError, setLastError] = useState<string | null>(null);
   const inflightId = useRef<string | null>(null);
-  const listeners = useRef<{ onToken?: (t: string) => void; onDone?: () => void; onAny?: (data: any) => void }>({});
-  const backoffRef = useRef(500);
+  const listeners = useRef<{
+    onToken?: (t: string) => void;
+    onDone?: () => void;
+    onAny?: (data: any) => void;
+  }>({});
+  const reconnectBackoff = useRef(500);
 
   const connect = useCallback(() => {
-    if (wsRef.current && (wsRef.current.readyState === WebSocket.OPEN || wsRef.current.readyState === WebSocket.CONNECTING)) return;
+    if (
+      wsRef.current &&
+      (wsRef.current.readyState === WebSocket.OPEN ||
+        wsRef.current.readyState === WebSocket.CONNECTING)
+    )
+      return;
+
     try {
       setStatus("connecting");
       const ws = new WebSocket(endpoint);
       wsRef.current = ws;
+
       ws.onopen = () => {
         setStatus("open");
         setLastError(null);
-        backoffRef.current = 500;
+        reconnectBackoff.current = 500;
       };
-      ws.onmessage = (ev) => {
-        const raw = ev.data;
+
+      ws.onmessage = (ev) => { 
+        
         try {
-          const msg = JSON.parse(raw);
+          // Direct JSON per message
+          const msg = JSON.parse(ev.data);
           listeners.current.onAny?.(msg);
-          if (typeof msg?.token === "string") listeners.current.onToken?.(msg.token);
-          if (msg?.done === true) listeners.current.onDone?.();
-        } catch {
-          listeners.current.onToken?.(String(raw));
+          if (typeof msg.token === "string") listeners.current.onToken?.(msg.token);
+          if (msg.done) listeners.current.onDone?.();
+        } catch (err) {
+          console.warn("Bad JSON message:", ev.data);
         }
       };
-      ws.onerror = () => {
+
+      ws.onerror = (err) => {
+        console.warn("WebSocket error", err);
         setStatus("error");
         setLastError("WebSocket error");
       };
+
       ws.onclose = () => {
         setStatus("closed");
-        setTimeout(connect, backoffRef.current);
-        backoffRef.current = Math.min(backoffRef.current * 2, 8000);
+        // Reconnect with exponential backoff
+        setTimeout(connect, reconnectBackoff.current);
+        reconnectBackoff.current = Math.min(reconnectBackoff.current * 2, 8000);
       };
     } catch (e: any) {
       setStatus("error");
@@ -50,16 +67,18 @@ export function useInferSocket(endpoint: string) {
 
   useEffect(() => {
     connect();
-    return () => { wsRef.current?.close(); };
+    return () => {
+      wsRef.current?.close();
+    };
   }, [connect]);
 
   const sendPrompt = useCallback((prompt: string, opts?: { model?: string; convoId?: string }) => {
-    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) throw new Error("Socket not open");
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN)
+      throw new Error("Socket not open");
+
     const id = uuidv4();
     inflightId.current = id;
-    const payload: any = { type: "chat", id, prompt };
-    if (opts?.model) payload.model = opts.model;
-    if (opts?.convoId) payload.conversation_id = opts.convoId;
+    const payload: any = { id, text: prompt, model: opts?.model ?? "mistral-7b-lora" };
     wsRef.current.send(JSON.stringify(payload));
     return id;
   }, []);
@@ -67,11 +86,15 @@ export function useInferSocket(endpoint: string) {
   const cancel = useCallback(() => {
     const id = inflightId.current;
     if (!id) return;
-    try { wsRef.current?.send(JSON.stringify({ type: "cancel", id })); } catch {}
+    try {
+      wsRef.current?.send(JSON.stringify({ type: "cancel", id }));
+    } catch {}
     inflightId.current = null;
   }, []);
 
-  const setHandlers = useCallback((h: typeof listeners.current) => { listeners.current = h; }, []);
+  const setHandlers = useCallback((h: typeof listeners.current) => {
+    listeners.current = h;
+  }, []);
 
   return { status, lastError, sendPrompt, cancel, setHandlers } as const;
 }
