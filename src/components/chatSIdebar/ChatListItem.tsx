@@ -1,32 +1,35 @@
-// components/chatSidebar/ChatListItem.tsx
 import React from "react";
-import type { ChatSummary } from "./useChatStream";
+import type { ChatSummary } from "./useChatSummaries";
 import clsx from "clsx";
 
 interface ChatListItemProps {
   chat: ChatSummary;
   onSelect: (chatId: string) => void;
-  isActive?: boolean; // optional highlight for open chat
+  isActive?: boolean;
 }
 
+/**
+ * 💬 Displays a single chat summary in the sidebar list.
+ */
 export const ChatListItem: React.FC<ChatListItemProps> = ({
   chat,
   onSelect,
   isActive = false,
 }) => {
-  // Defensive fallbacks for incomplete Kafka / WS data
-  const chatId = chat?.chat_id ?? chat?.session_id ?? "unknown";
-  const shortId = typeof chatId === "string" ? chatId.slice(0, 8) : "—";
+  const chatId = chat.chat_id ?? "unknown";
+  const shortId =
+    chatId.length > 8 ? chatId.slice(0, 8) : chatId;
 
-  const date =
-    chat?.ts && !Number.isNaN(chat.ts)
-      ? new Date(chat.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+  const time =
+    chat.ts && !Number.isNaN(chat.ts)
+      ? new Date(chat.ts).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
       : "—";
 
-  const preview =
-    typeof chat?.preview === "string" && chat.preview.trim().length > 0
-      ? chat.preview
-      : "No messages yet";
+  // 🧠 Pick a safe preview text
+  const preview = chat.preview?.trim() || "No messages yet";
 
   return (
     <button
@@ -39,11 +42,12 @@ export const ChatListItem: React.FC<ChatListItemProps> = ({
       )}
     >
       <div className="flex justify-between items-center mb-0.5">
-        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+        <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
           Chat {shortId}
         </span>
-        <span className="text-xs text-gray-500">{date}</span>
+        <span className="text-xs text-gray-500">{time}</span>
       </div>
+
       <div className="text-xs text-gray-600 dark:text-gray-400 truncate">
         {preview}
       </div>

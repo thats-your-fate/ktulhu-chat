@@ -1,15 +1,14 @@
-import React, { createContext, useContext, useRef, useEffect } from "react";
+import React, { useEffect, createContext, useContext } from "react";
 import { useInferSocket } from "../hooks/useInferSocket";
 import type { WSStatus } from "../hooks/useInferSocket";
-
 import { getSocketEndpoint } from "../components/lib/getSocketEndpoint";
 
 type SocketContextType = {
-  socket: WebSocket | null;
-  status: WSStatus; // ✅ use the correct union type
+  wsRef: React.MutableRefObject<WebSocket | null>; // 👈 direct access
+  status: WSStatus;
   lastError?: string | null;
-  reconnect: () => void;
   sendPrompt: (prompt: string, opts?: any) => void;
+  cancel: () => void;
   addHandlers: ReturnType<typeof useInferSocket>["addHandlers"];
 };
 
@@ -20,29 +19,27 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const endpoint = getSocketEndpoint();
 
-  const { status, lastError, sendPrompt, cancel, addHandlers } =
-    useInferSocket(endpoint);
+  
+  const { wsRef, status, lastError, sendPrompt, cancel, addHandlers } =
+    useInferSocket(endpoint); // 👈 single source of truth
 
-  const socketRef = useRef<WebSocket | null>(null);
+useEffect(() => {
+  if (!wsRef.current) return;
+  console.log("🔌 WebSocket reference from useInferSocket:", wsRef.current);
+  wsRef.current.addEventListener("message", (e) => {
+    console.log("📨 Global WS message seen in context:", e.data);
+  });
+}, [wsRef]);
 
-  useEffect(() => {
-    const ws = new WebSocket(endpoint);
-    socketRef.current = ws;
-    return () => ws.close();
-  }, [endpoint]);
-
-  const reconnect = () => {
-    socketRef.current?.close();
-  };
-
+    
   return (
     <SocketContext.Provider
       value={{
-        socket: socketRef.current,
+        wsRef,
         status,
         lastError,
-        reconnect,
         sendPrompt,
+        cancel,
         addHandlers,
       }}
     >

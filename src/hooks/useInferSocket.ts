@@ -129,5 +129,5 @@ if (!(listeners.current instanceof Set)) {
     return () => listeners.current.delete(h); // cleanup function
   }, []);
 
-  return { status, lastError, sendPrompt, cancel, addHandlers } as const;
+return { status, lastError, sendPrompt, cancel, addHandlers, wsRef } as const;
 }

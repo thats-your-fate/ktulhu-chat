@@ -71,11 +71,11 @@ export const ShellHeaderMobile: React.FC<ShellHeaderMobileProps> = ({
                   location.pathname === link.path
                     ? "font-semibold text-blue-600 dark:text-blue-400"
                     : "text-gray-700 dark:text-gray-200"
-                }`}
+                }`}   
               >
                 {link.label}
               </Link>
-            ))}
+            ))} 
 
             {/* WebSocket switcher */}
             <button onClick={onSwap} className="text-xs text-gray-500 mt-2">
