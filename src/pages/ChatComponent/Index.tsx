@@ -18,7 +18,7 @@ export default function ChatComponent() {
   const [isSending, setIsSending] = useState(false);
   const endpoint = getSocketEndpoint();
   const [model] = useState(DEFAULT_MODEL);
-  const { status, lastError, sendPrompt, cancel, setHandlers } = useInferSocket(endpoint);
+const { status, lastError, sendPrompt, cancel, addHandlers } = useInferSocket(endpoint);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   // Auto-scroll
@@ -27,23 +27,23 @@ export default function ChatComponent() {
   }, [history.length, history[history.length - 1]?.content]);
 
   // WebSocket handlers
-  useEffect(() => {
-    let currentAssistantId: string | null = null;
-    setHandlers({
-      onAny: (msg) => {
-        if (!currentAssistantId && msg?.token) {
-          currentAssistantId = uuidv4();
-          add({ id: currentAssistantId, role: "assistant", content: "" });
-        }
-      },
-      onToken: (t) => currentAssistantId && patch(currentAssistantId, t),
-      onDone: () => {
-        setIsSending(false);
-        currentAssistantId = null;
-      },
-    });
-    return () => setHandlers({});
-  }, [add, patch, setHandlers]);
+useEffect(() => {
+  let currentAssistantId: string | null = null;
+ const remove = addHandlers({
+   onAny: (msg) => {
+     if (!currentAssistantId && msg?.token) {
+      currentAssistantId = uuidv4();
+      add({ id: currentAssistantId, role: "assistant", content: "" });     }
+  },
+   onToken: (t) => currentAssistantId && patch(currentAssistantId, t),
+  onDone: () => {
+    setIsSending(false);
+     currentAssistantId = null;
+  },
+ });
+
+return () => remove();
+}, [add, patch, addHandlers]);
 
   const handleSend = useCallback(async () => {
     const trimmed = input.trim();
@@ -65,12 +65,12 @@ export default function ChatComponent() {
   return (
     <Container>
       {/* 👇 Convert null → undefined for TS safety */}
-      <ChatHeader status={status} lastError={lastError ?? undefined} />
+     {/* <ChatHeader status={status} lastError={lastError ?? undefined} />*/}
 
       <Card>
-        <CardHeader title="Chat" subtitle="Enter to send • Shift+Enter for newline" />
+       {/* <CardHeader title="Chat" subtitle="Enter to send • Shift+Enter for newline" />*/}
 
-        <CardBody className="h-[65vh] overflow-y-auto" ref={scrollRef as any}>
+        <CardBody className="h-[80vh] overflow-y-auto" ref={scrollRef as any}>
           <MessageList history={history} />
         </CardBody>
 

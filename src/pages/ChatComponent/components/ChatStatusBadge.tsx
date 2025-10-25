@@ -8,6 +8,8 @@ export const ChatStatusBadge: React.FC<{ status: string }> = ({ status }) => {
     open: "bg-green-100",
     closed: "bg-gray-200",
     error: "bg-red-100",
+      connected: "bg-green-100",
+  disconnected: "bg-red-100",
   };
 
   return <Badge className={`${map[status]} ml-2`}>{status}</Badge>;

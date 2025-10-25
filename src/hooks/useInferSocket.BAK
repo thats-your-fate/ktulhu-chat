@@ -38,7 +38,6 @@ if (!(listeners.current instanceof Set)) {
       const ws = new WebSocket(endpoint);
       wsRef.current = ws;
 
-      
       ws.onopen = () => {
         reconnecting.current = false;
         setStatus("open");

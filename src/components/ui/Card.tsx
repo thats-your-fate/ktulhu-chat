@@ -7,9 +7,8 @@ export const Card = forwardRef<HTMLDivElement, { children: React.ReactNode; clas
     <div
       ref={ref}
       className={clsx(
-        "rounded-2xl shadow-sm border",
-        "bg-card-bg border-card-border",
-        "dark:bg-card-bg-dark dark:border-card-border-dark",
+        
+        "mx-auto dark:bg-card-bg-dark dark:border-card-border-dark",
         className
       )}
     >
@@ -26,7 +25,7 @@ export const CardHeader: React.FC<{ title: string; subtitle?: string }> = ({
 }) => (
   <div
     className={clsx(
-      "px-4 py-3 border-b",
+      "mx auto px-4 py-3 border-b",
       "border-card-divider dark:border-card-divider-dark"
     )}
   >
@@ -57,7 +56,7 @@ export const CardBody = forwardRef<
   <div
     ref={ref}
     className={clsx(
-      "px-4 py-3 text-card-text dark:text-card-text-dark",
+      "px-4 py-4 text-card-text dark:text-card-text-dark",
       className
     )}
   >

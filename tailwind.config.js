@@ -84,7 +84,7 @@ export default {
         "message-assistant-text-dark": "#f9fafb", // light text 
             // App background / text (reuse card + text tokens)
     "app-bg": "#f9fafb",
-    "app-bg-dark": "#0f172a",
+    "app-bg-dark": "#1f2937",
     "app-text": "#1f2937",
     "app-text-dark": "#f3f4f6",
 
