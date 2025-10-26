@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useSession } from "../../context/SessionContext";
 import { ChatListItem } from "./ChatListItem";
 import { useChatSummaries } from "./useChatSummaries";
@@ -8,13 +8,17 @@ interface ChatSidebarProps {
 }
 
 export const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectChat }) => {
-  const { deviceHash } = useSession();
-  const chats = useChatSummaries({ baseUrl: "http://localhost:8080" }); // adjust if proxying
-  const [activeChatId, setActiveChatId] = useState<string | null>(null);
+  const { chatId, setChatId } = useSession();
+  const chats = useChatSummaries({ baseUrl: "http://localhost:8080" });
 
-  const handleSelectChat = (chatId: string) => {
-    setActiveChatId(chatId);
-    onSelectChat?.(chatId);
+  const handleSelectChat = (id: string) => {
+    setChatId(id);                // ✅ update global session chatId
+    onSelectChat?.(id);
+  };
+
+  const handleNewChat = () => {
+    const newId = crypto.randomUUID();
+    handleSelectChat(newId);
   };
 
   return (
@@ -24,10 +28,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectChat }) => {
           Recent Chats
         </h2>
         <button
-          onClick={() => {
-            const newId = crypto.randomUUID();
-            handleSelectChat(newId);
-          }}
+          onClick={handleNewChat}
           className="text-sm bg-chat-item-bg text-chat-item-text dark:bg-chat-item-bg-dark dark:text-chat-item-text-dark"
         >
           + New
@@ -45,7 +46,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectChat }) => {
               key={chat.chat_id}
               chat={chat}
               onSelect={handleSelectChat}
-              isActive={chat.chat_id === activeChatId}
+              isActive={chat.chat_id === chatId}  // ✅ highlight based on global chatId
             />
           ))
         )}

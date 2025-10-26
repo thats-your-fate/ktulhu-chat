@@ -33,6 +33,28 @@ export const ShellHeaderDesktop: React.FC<ShellHeaderProps> = ({
         <div className="flex flex-wrap items-center justify-between py-3 gap-2">
           {/* Left side — title + status */}
           <div className="flex items-center gap-3">
+<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#111111"/>
+    </linearGradient>
+    <clipPath id="r">
+      <rect x="0" y="0" width="64" height="64" rx="12"/>
+    </clipPath>
+  </defs>
+
+  <rect width="64" height="64" fill="none" clip-path="url(#r)"/>
+
+  <path d="M32 12c-9 0-15 6-15 14 0 6 3 10 7 13 2 2 3 4 4 6l1 3a3 3 0 0 0 6 0l1-3c1-2 2-4 4-6 4-3 7-7 7-13 0-8-6-14-15-14z" fill="url(#g)"/>
+  <path d="M18 40c-5 1-8 5-8 9 0 4 4 6 7 5 3-1 5-4 3-7-2-3-5-3-7-1" stroke="url(#g)" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M46 40c5 1 8 5 8 9 0 4-4 6-7 5-3-1-5-4-3-7 2-3 5-3 7-1" stroke="url(#g)" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+  <circle cx="26" cy="28" r="1.8" fill="#111"/>
+  <circle cx="38" cy="28" r="1.8" fill="#111"/>
+</svg>
+
+
             <Link
               to="/"
               className="text-xl font-bold tracking-tight text-header-title dark:text-header-title-dark"

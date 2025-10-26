@@ -44,7 +44,12 @@ if (!(listeners.current instanceof Set)) {
         setStatus("open");
         setLastError(null);
         reconnectBackoff.current = 500;
-        ws.send(JSON.stringify({ type: "register", device_hash: deviceHash }));
+ ws.send(JSON.stringify({
+  type: "register",
+   device_hash: deviceHash,
+  session_id: sessionId,
+  chat_id: chatId, // ✅ tell backend what thread this socket belongs to
+}));
       };
 
       ws.onmessage = (ev) => {
@@ -86,12 +91,13 @@ if (!(listeners.current instanceof Set)) {
       setStatus("error");
       setLastError(e?.message ?? "Failed to connect");
     }
-  }, [endpoint, deviceHash]);
+  }, [endpoint, deviceHash,chatId]);
 
   useEffect(() => {
     connect();
+      return () => wsRef.current?.close();
     return () => wsRef.current?.close();
-  }, [connect]);
+  }, [connect,chatId]);
 
   const sendPrompt = useCallback(
     (prompt: string, opts?: { model?: string; convoId?: string }) => {

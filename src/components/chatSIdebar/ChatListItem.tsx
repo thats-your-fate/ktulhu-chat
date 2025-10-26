@@ -10,7 +10,7 @@ interface ChatListItemProps {
 
 /**
  * 💬 Displays a single chat summary in the sidebar list.
- * Flat layout with divider, keeping chat-item colors.
+ * Shows model summary (if available) as title and message preview.
  */
 export const ChatListItem: React.FC<ChatListItemProps> = ({
   chat,
@@ -20,6 +20,7 @@ export const ChatListItem: React.FC<ChatListItemProps> = ({
   const chatId = chat.chat_id ?? "unknown";
   const shortId = chatId.length > 8 ? chatId.slice(0, 8) : chatId;
 
+  // 🕒 Time display
   const time =
     chat.ts && !Number.isNaN(chat.ts)
       ? new Date(chat.ts).toLocaleTimeString([], {
@@ -28,7 +29,15 @@ export const ChatListItem: React.FC<ChatListItemProps> = ({
         })
       : "—";
 
-  const preview = chat.preview?.trim() || "No messages yet";
+  // 🧠 Choose best summary text available
+  const summary = chat.summary?.trim() || null;
+  const preview = chat.preview?.trim() || null;
+
+  // Title: show summary or fallback to Chat ID
+  const title = summary || `Chat ${shortId}`;
+
+  // Subtext: show preview or fallback to summary
+  const subtext = preview || summary || "No messages yet";
 
   return (
     <button
@@ -45,13 +54,11 @@ export const ChatListItem: React.FC<ChatListItemProps> = ({
       )}
     >
       <div className="flex justify-between items-center mb-0.5">
-        <span className="text-sm font-medium truncate">
-          Chat {shortId}
-        </span>
+        <span className="text-sm font-medium truncate">{title}</span>
         <span className="text-xs opacity-70">{time}</span>
       </div>
 
-      <div className="text-xs opacity-80 truncate">{preview}</div>
+      <div className="text-xs opacity-80 truncate">{subtext}</div>
     </button>
   );
 };
