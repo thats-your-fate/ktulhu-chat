@@ -27,15 +27,28 @@ export const ChatInput: React.FC<Props> = ({
   };
 
   return (
-    <div className="flex items-end gap-2">
-      <Textarea
-        rows={2}
-        placeholder="Ask anything…"
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        onKeyDown={onKeyDown}
-      />
-      <div className="flex flex-col gap-2 w-28">
+    <div
+      className={`
+        absolute bottom-0 left-0 right-0
+        flex items-end gap-2
+        bg-app-bg/95 dark:bg-app-bg-dark/95
+        backdrop-blur-sm
+
+        px-3 py-3
+      `}
+    >
+      <div className="flex-1">
+        <Textarea
+          rows={2}
+          placeholder="Ask anything…"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={onKeyDown}
+          className="w-full"
+        />
+      </div>
+
+      <div className="flex flex-col gap-2 w-28 shrink-0">
         <Button onClick={handleSend} disabled={isSending || !input.trim()}>
           Send
         </Button>

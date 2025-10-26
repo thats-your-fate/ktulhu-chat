@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { Container } from "../../components/ui/Container";
-import { Card, CardHeader, CardBody } from "../../components/ui/Card";
+import { Pannel, PannelBody } from "../../components/ui/Pannel";
 import { useInferSocket } from "../../hooks/useInferSocket";
 import { useChatStore } from "../../store/useChatStore";
 import { getSocketEndpoint } from "../../components/lib/getSocketEndpoint";
 
-import { ChatHeader } from "./components/ChatHeader";
 import { MessageList } from "./components/MessageList";
 import { ChatInput } from "./components/ChatInput";
 
@@ -18,32 +17,33 @@ export default function ChatComponent() {
   const [isSending, setIsSending] = useState(false);
   const endpoint = getSocketEndpoint();
   const [model] = useState(DEFAULT_MODEL);
-const { status, lastError, sendPrompt, cancel, addHandlers } = useInferSocket(endpoint);
+  const { status, lastError, sendPrompt, cancel, addHandlers } = useInferSocket(endpoint);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
-  // Auto-scroll
+  // Auto-scroll when new messages arrive
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: 999999, behavior: "smooth" });
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [history.length, history[history.length - 1]?.content]);
 
   // WebSocket handlers
-useEffect(() => {
-  let currentAssistantId: string | null = null;
- const remove = addHandlers({
-   onAny: (msg) => {
-     if (!currentAssistantId && msg?.token) {
-      currentAssistantId = uuidv4();
-      add({ id: currentAssistantId, role: "assistant", content: "" });     }
-  },
-   onToken: (t) => currentAssistantId && patch(currentAssistantId, t),
-  onDone: () => {
-    setIsSending(false);
-     currentAssistantId = null;
-  },
- });
+  useEffect(() => {
+    let currentAssistantId: string | null = null;
+    const remove = addHandlers({
+      onAny: (msg) => {
+        if (!currentAssistantId && msg?.token) {
+          currentAssistantId = uuidv4();
+          add({ id: currentAssistantId, role: "assistant", content: "" });
+        }
+      },
+      onToken: (t) => currentAssistantId && patch(currentAssistantId, t),
+      onDone: () => {
+        setIsSending(false);
+        currentAssistantId = null;
+      },
+    });
 
-return () => remove();
-}, [add, patch, addHandlers]);
+    return () => remove();
+  }, [add, patch, addHandlers]);
 
   const handleSend = useCallback(async () => {
     const trimmed = input.trim();
@@ -63,18 +63,18 @@ return () => remove();
   }, [input, isSending, model, add, patch, sendPrompt]);
 
   return (
-    <Container>
-      {/* 👇 Convert null → undefined for TS safety */}
-     {/* <ChatHeader status={status} lastError={lastError ?? undefined} />*/}
-
-      <Card>
-       {/* <CardHeader title="Chat" subtitle="Enter to send • Shift+Enter for newline" />*/}
-
-        <CardBody className="h-[80vh] overflow-y-auto" ref={scrollRef as any}>
+    <Container className="h-[calc(100vh-6rem)] flex justify-center">
+      <Pannel className="flex flex-col w-full max-w-4xl h-full relative  rounded-2xl overflow-hidden">
+        {/* Message list (scrollable area) */}
+        <PannelBody
+          ref={scrollRef as any}
+          className="flex-1 overflow-y-auto pb-[120px] transition-all"
+        >
           <MessageList history={history} />
-        </CardBody>
+        </PannelBody>
 
-        <CardBody className="border-t border-gray-100">
+        {/* Chat input (fixed inside card) */}
+        <div className="absolute bottom-0 left-0 right-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 px-4 py-3">
           <ChatInput
             input={input}
             setInput={setInput}
@@ -86,8 +86,8 @@ return () => remove();
           <div className="text-xs text-gray-500 mt-2">
             Endpoint: {endpoint ?? "unknown"} • Model: {model}
           </div>
-        </CardBody>
-      </Card>
+        </div>
+      </Pannel>
     </Container>
   );
 }

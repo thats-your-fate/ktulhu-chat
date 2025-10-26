@@ -10,6 +10,7 @@ interface ChatListItemProps {
 
 /**
  * 💬 Displays a single chat summary in the sidebar list.
+ * Flat layout with divider, keeping chat-item colors.
  */
 export const ChatListItem: React.FC<ChatListItemProps> = ({
   chat,
@@ -17,8 +18,7 @@ export const ChatListItem: React.FC<ChatListItemProps> = ({
   isActive = false,
 }) => {
   const chatId = chat.chat_id ?? "unknown";
-  const shortId =
-    chatId.length > 8 ? chatId.slice(0, 8) : chatId;
+  const shortId = chatId.length > 8 ? chatId.slice(0, 8) : chatId;
 
   const time =
     chat.ts && !Number.isNaN(chat.ts)
@@ -28,29 +28,30 @@ export const ChatListItem: React.FC<ChatListItemProps> = ({
         })
       : "—";
 
-  // 🧠 Pick a safe preview text
   const preview = chat.preview?.trim() || "No messages yet";
 
   return (
     <button
       onClick={() => onSelect(chatId)}
       className={clsx(
-        "w-full text-left px-4 py-2 rounded-lg transition",
+        // Layout & divider
+        "rounded-none w-full text-left px-4 py-2 border-b last:border-b-0 transition-colors duration-150",
+        // Divider colors
+        "border-app-bg-dark/20 dark:border-app-bg/20",
+        // Background and text (keep chat-item scheme)
         isActive
-          ? "bg-gray-200 dark:bg-gray-700"
-          : "hover:bg-gray-100 dark:hover:bg-gray-800"
+          ? "bg-chat-item-bg text-chat-item-text dark:bg-chat-item-bg-dark dark:text-chat-item-text-dark"
+          : "bg-chat-item-bg text-chat-item-text dark:bg-chat-item-bg-dark dark:text-chat-item-text-dark hover:bg-app-bg/80 dark:hover:bg-app-bg-dark/80"
       )}
     >
       <div className="flex justify-between items-center mb-0.5">
-        <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+        <span className="text-sm font-medium truncate">
           Chat {shortId}
         </span>
-        <span className="text-xs text-gray-500">{time}</span>
+        <span className="text-xs opacity-70">{time}</span>
       </div>
 
-      <div className="text-xs text-gray-600 dark:text-gray-400 truncate">
-        {preview}
-      </div>
+      <div className="text-xs opacity-80 truncate">{preview}</div>
     </button>
   );
 };

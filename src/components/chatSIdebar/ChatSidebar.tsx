@@ -28,7 +28,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectChat }) => {
             const newId = crypto.randomUUID();
             handleSelectChat(newId);
           }}
-          className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+          className="text-sm bg-chat-item-bg text-chat-item-text dark:bg-chat-item-bg-dark dark:text-chat-item-text-dark"
         >
           + New
         </button>

@@ -2,7 +2,7 @@ import React, { forwardRef } from "react";
 import clsx from "clsx"; // optional helper if you like cleaner className joining
 
 // ---------- CARD CONTAINER ----------
-export const Card = forwardRef<HTMLDivElement, { children: React.ReactNode; className?: string }>(
+export const Pannel = forwardRef<HTMLDivElement, { children: React.ReactNode; className?: string }>(
   ({ children, className = "" }, ref) => (
     <div
       ref={ref}
@@ -16,10 +16,10 @@ export const Card = forwardRef<HTMLDivElement, { children: React.ReactNode; clas
     </div>
   )
 );
-Card.displayName = "Card";
+Pannel.displayName = "Card";
 
 // ---------- CARD HEADER ----------
-export const CardHeader: React.FC<{ title: string; subtitle?: string }> = ({
+export const PannelHeader: React.FC<{ title: string; subtitle?: string }> = ({
   title,
   subtitle,
 }) => (
@@ -49,7 +49,7 @@ export const CardHeader: React.FC<{ title: string; subtitle?: string }> = ({
 );
 
 // ---------- CARD BODY ----------
-export const CardBody = forwardRef<
+export const PannelBody = forwardRef<
   HTMLDivElement,
   { children: React.ReactNode; className?: string }
 >(({ children, className = "" }, ref) => (
@@ -63,4 +63,4 @@ export const CardBody = forwardRef<
     {children}
   </div>
 ));
-CardBody.displayName = "CardBody";
+PannelBody.displayName = "CardBody";
