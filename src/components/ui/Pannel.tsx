@@ -56,7 +56,7 @@ export const PannelBody = forwardRef<
   <div
     ref={ref}
     className={clsx(
-      "px-4 py-4 text-card-text dark:text-card-text-dark",
+      "px-4 py-4 mb-[2.5rem] text-card-text dark:text-card-text-dark",
       className
     )}
   >

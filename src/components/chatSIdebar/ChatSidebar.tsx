@@ -9,16 +9,25 @@ interface ChatSidebarProps {
 
 export const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectChat }) => {
   const { chatId, setChatId } = useSession();
-  const chats = useChatSummaries({ baseUrl: "http://localhost:8080" });
+
+  // 🧠 Use the new structured result
+  const { chats, upsert, clear } = useChatSummaries();
 
   const handleSelectChat = (id: string) => {
-    setChatId(id);                // ✅ update global session chatId
+    setChatId(id);
     onSelectChat?.(id);
   };
 
   const handleNewChat = () => {
     const newId = crypto.randomUUID();
     handleSelectChat(newId);
+
+    // 🪄 optionally create a placeholder summary immediately
+    upsert({
+      chat_id: newId,
+      summary: "New chat",
+      ts: Date.now(),
+    });
   };
 
   return (
@@ -27,12 +36,21 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectChat }) => {
         <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
           Recent Chats
         </h2>
-        <button
-          onClick={handleNewChat}
-          className="text-sm bg-chat-item-bg text-chat-item-text dark:bg-chat-item-bg-dark dark:text-chat-item-text-dark"
-        >
-          + New
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleNewChat}
+            className="text-sm bg-chat-item-bg text-chat-item-text dark:bg-chat-item-bg-dark dark:text-chat-item-text-dark rounded-md px-2 py-1"
+          >
+            + New
+          </button>
+          <button
+            onClick={clear}
+            className="text-sm bg-chat-item-bg text-chat-item-text dark:bg-chat-item-bg-dark dark:text-chat-item-text-dark rounded-md px-2 py-1"
+            title="Clear all"
+          >
+            🗑
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto">
@@ -46,7 +64,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectChat }) => {
               key={chat.chat_id}
               chat={chat}
               onSelect={handleSelectChat}
-              isActive={chat.chat_id === chatId}  // ✅ highlight based on global chatId
+              isActive={chat.chat_id === chatId}
             />
           ))
         )}

@@ -10,7 +10,7 @@ interface ChatListItemProps {
 
 /**
  * 💬 Displays a single chat summary in the sidebar list.
- * Shows model summary (if available) as title and message preview.
+ * Supports "New chat" placeholder state until a real summary/text arrives.
  */
 export const ChatListItem: React.FC<ChatListItemProps> = ({
   chat,
@@ -20,7 +20,7 @@ export const ChatListItem: React.FC<ChatListItemProps> = ({
   const chatId = chat.chat_id ?? "unknown";
   const shortId = chatId.length > 8 ? chatId.slice(0, 8) : chatId;
 
-  // 🕒 Time display
+  // 🕒 Format time safely
   const time =
     chat.ts && !Number.isNaN(chat.ts)
       ? new Date(chat.ts).toLocaleTimeString([], {
@@ -29,36 +29,54 @@ export const ChatListItem: React.FC<ChatListItemProps> = ({
         })
       : "—";
 
-  // 🧠 Choose best summary text available
-  const summary = chat.summary?.trim() || null;
-  const preview = chat.preview?.trim() || null;
+  // 🧠 Determine if this is a placeholder (no summary or text yet)
+  const isPlaceholder =
+    (!chat.summary || chat.summary.trim() === "") &&
+    (!chat.text || chat.text.trim() === "");
 
-  // Title: show summary or fallback to Chat ID
-  const title = summary || `Chat ${shortId}`;
-
-  // Subtext: show preview or fallback to summary
-  const subtext = preview || summary || "No messages yet";
+  // 🧾 Display logic
+  const summary = chat.summary?.trim() || "";
+  const text = chat.text?.trim() || "";
+  const title = isPlaceholder ? "New chat…" : summary || `Chat ${shortId}`;
+  const subtext = isPlaceholder
+    ? "Waiting for model summary…"
+    : text
+    ? text.length > 100
+      ? text.slice(0, 100) + "…"
+      : text
+    : summary || "No messages yet";
 
   return (
     <button
       onClick={() => onSelect(chatId)}
       className={clsx(
-        // Layout & divider
         "rounded-none w-full text-left px-4 py-2 border-b last:border-b-0 transition-colors duration-150",
-        // Divider colors
         "border-app-bg-dark/20 dark:border-app-bg/20",
-        // Background and text (keep chat-item scheme)
         isActive
-          ? "bg-chat-item-bg text-chat-item-text dark:bg-chat-item-bg-dark dark:text-chat-item-text-dark"
+          ? "bg-indigo-600 text-white"
           : "bg-chat-item-bg text-chat-item-text dark:bg-chat-item-bg-dark dark:text-chat-item-text-dark hover:bg-app-bg/80 dark:hover:bg-app-bg-dark/80"
       )}
     >
       <div className="flex justify-between items-center mb-0.5">
-        <span className="text-sm font-medium truncate">{title}</span>
+        <span
+          className={clsx(
+            "text-sm font-medium truncate",
+            isPlaceholder && "italic opacity-70"
+          )}
+        >
+          {title}
+        </span>
         <span className="text-xs opacity-70">{time}</span>
       </div>
 
-      <div className="text-xs opacity-80 truncate">{subtext}</div>
+      <div
+        className={clsx(
+          "text-xs truncate",
+          isPlaceholder ? "italic opacity-60" : "opacity-80"
+        )}
+      >
+        {subtext}
+      </div>
     </button>
   );
 };
