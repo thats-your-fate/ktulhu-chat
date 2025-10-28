@@ -22,7 +22,7 @@ export default function ChatComponent() {
   const { sendPrompt, cancel, addHandlers } = useInferSocket(endpoint);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
-  // 🧠 Fetch existing messages for this chat when chatId changes
+  // 🧠 Load existing messages for this chat
   useEffect(() => {
     if (!chatId) return;
 
@@ -64,9 +64,10 @@ export default function ChatComponent() {
     });
   }, [history.length, history.at(-1)?.content]);
 
-  // WebSocket streaming
+  // WebSocket streaming for assistant messages
   useEffect(() => {
     let currentAssistantId: string | null = null;
+
     const remove = addHandlers({
       onAny: (msg) => {
         if (!currentAssistantId && msg?.token) {
@@ -84,7 +85,7 @@ export default function ChatComponent() {
     return () => remove();
   }, [add, patch, addHandlers]);
 
-  // Send message
+  // 🧩 Send message (JSON payload instead of text)
   const handleSend = useCallback(async () => {
     const trimmed = input.trim();
     if (!trimmed || isSending) return;
@@ -95,15 +96,33 @@ export default function ChatComponent() {
     setIsSending(true);
 
     try {
-      sendPrompt(trimmed, { model });
+      // 🧠 Collect summaries belonging to the current chat
+      const summaries = history
+        .filter((m) => m.role === "summary" && m.content?.trim())
+        .map((m) => m.content.trim());
+
+      // 🧩 Build clean JSON payload
+      const messagePayload = {
+        role: "user",
+        chat_id: chatId,
+        model,
+        text: trimmed,
+        summaries, // ✅ structured summaries array
+        ts: Date.now(),
+      };
+
+      console.log("📤 Sending JSON payload:", messagePayload);
+
+      // ✅ Send JSON directly through WebSocket
+      sendPrompt(JSON.stringify(messagePayload));
     } catch (e) {
       setIsSending(false);
       patch(
         userId,
-        ` ${e instanceof Error ? e.message : "Failed to send"}`
+        ` ${e instanceof Error ? e.message : "Failed to send message"}`
       );
     }
-  }, [input, isSending, model, add, patch, sendPrompt]);
+  }, [input, isSending, model, add, patch, sendPrompt, history, chatId]);
 
   return (
     <Container className="h-[calc(100vh-6rem)] flex justify-center">

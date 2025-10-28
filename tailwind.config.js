@@ -4,6 +4,8 @@ export default {
   theme: {
     // extend tailwind's default theme
     extend: {
+
+
       colors: {
                 'badge-bg': '#f3f4f6', // light gray for light mode
         'badge-text': '#1f2937', // dark text for light mode
@@ -113,7 +115,8 @@ export default {
       },
 
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: ['"myriad-pro"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        condensed: ['"myriad-pro-condensed"', 'sans-serif'],
       },
 
       maxWidth: {

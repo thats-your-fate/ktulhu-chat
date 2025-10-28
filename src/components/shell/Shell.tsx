@@ -5,6 +5,7 @@ import { ShellHeaderDesktop, ShellHeaderMobile } from "./ShellHeader";
 import { getSocketEndpoint } from "../lib/getSocketEndpoint";
 import { useIsMobile } from "../../hooks/useIsMobile";
 import { ChatSidebar } from "../chatSIdebar";
+import { ChatSidebarMobile } from "../chatSIdebar/ChatSidebarMobile";
 
 export const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
@@ -59,13 +60,21 @@ export const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     >
       {/* Header */}
       {isMobile ? (
-        <ShellHeaderMobile
-          location={location}
-          navLinks={navLinks}
-          endpoint={endpoint}
-          onSwap={handleSwap}
-          onToggleTheme={toggleTheme}
-        />
+        <div className="flex items-center justify-between border-b border-header-border dark:border-header-border-dark bg-header-bg dark:bg-header-bg-dark px-2 py-2">
+          {/* 🟢 Mobile sidebar burger (left side of header) */}
+          <ChatSidebarMobile onSelectChat={(id) => console.log("Open chat:", id)} />
+
+          {/* Regular mobile header (right side of header area) */}
+          {/*  /*
+          <ShellHeaderMobile
+            location={location}
+            navLinks={navLinks}
+            endpoint={endpoint}
+            onSwap={handleSwap}
+            onToggleTheme={toggleTheme}
+          />
+          */}
+        </div>
       ) : (
         <ShellHeaderDesktop
           location={location}
@@ -76,12 +85,14 @@ export const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         />
       )}
 
-      {/* Chat content fills available space */}
+      {/* Main layout */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* Sidebar */}
-        <aside className="hidden md:flex md:w-2/12 lg:w-2/12 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700">
-          <ChatSidebar onSelectChat={(id) => console.log("Open chat:", id)} />
-        </aside>
+        {/* Desktop sidebar */}
+        {!isMobile && (
+          <aside className="hidden md:flex md:w-2/12 lg:w-2/12 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700">
+            <ChatSidebar onSelectChat={(id) => console.log("Open chat:", id)} />
+          </aside>
+        )}
 
         {/* Main content */}
         <main className="flex-1 min-h-0 overflow-y-auto">

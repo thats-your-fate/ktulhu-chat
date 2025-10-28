@@ -1,10 +1,22 @@
 
 @import "highlight.js/styles/github-dark.css";
+/* Adobe Fonts: Myriad Pro */
+@import url("https://p.typekit.net/p.css?s=1&k=jue5pfp&ht=tk&f=6808.6846&a=354888889&app=typekit&e=css");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0%);
+  }
+}
+ 
 
 
 .hljs {
@@ -28,9 +40,9 @@
   --color-surface: #1a1a1a;
 }
 
-body {
+html body {
   @apply bg-[var(--color-bg)] text-[var(--color-brand)] transition-colors;
-  font-family: theme("fontFamily.sans");
+  @apply font-sans;
 }
 
 

@@ -28,7 +28,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({
     return (
       <code
         className="
-          px-2 py-[3px] rounded-md font-mono text-[0.85em]
+          px-0 py-[3px] rounded-md font-mono text-[0.85em]
           bg-slate-100/70 text-slate-800
           dark:bg-slate-800/70 dark:text-slate-100
         "

@@ -1,6 +1,7 @@
 import React from "react";
-import { Textarea } from "../../../components/ui/Textarea";
+import { InputArea } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/Button";
+import { SvgIcon } from "../../../components/ui/SvgIcon"; // uses your inline SVG loader
 
 interface Props {
   input: string;
@@ -22,43 +23,35 @@ export const ChatInput: React.FC<Props> = ({
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      if (isSending) cancel();
+      else handleSend();
     }
+  };
+
+  const onMainButtonClick = () => {
+    if (isSending) cancel();
+    else handleSend();
   };
 
   return (
     <div
       className={`
         absolute bottom-0 left-0 right-0
-        flex items-end gap-2
+        flex items-end gap-3
         bg-app-bg/95 dark:bg-app-bg-dark/95
         backdrop-blur-sm
-
         px-3 py-3
       `}
     >
-      <div className="flex-1">
-        <Textarea
-          rows={2}
-          placeholder="Ask anything…"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={onKeyDown}
-          className="w-full"
-        />
-      </div>
+      {/* InputArea with embedded send/stop/mic button */}
+<InputArea
+  value={input}
+  onChange={setInput}
+  onKeyDown={onKeyDown}
+  className="w-full"
 
-      <div className="flex flex-col gap-2 w-28 shrink-0">
-        <Button onClick={handleSend} disabled={isSending || !input.trim()}>
-          Send
-        </Button>
-        <Button variant="outline" onClick={cancel} disabled={!isSending}>
-          Stop
-        </Button>
-        <Button variant="ghost" onClick={clear}>
-          Clear
-        </Button>
-      </div>
+/>
+
     </div>
   );
 };

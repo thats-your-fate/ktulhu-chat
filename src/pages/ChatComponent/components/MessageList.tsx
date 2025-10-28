@@ -1,6 +1,5 @@
 import React from "react";
-import { MessageBubble } from "./MessageBuble"
-
+import { MessageBubble } from "./MessageBuble";
 
 interface Message {
   id: string;
@@ -23,15 +22,19 @@ export const MessageList: React.FC<MessageListProps> = ({ history }) => {
 
   return (
     <div className="space-y-3">
-      {history.map((m) =>
-        m.role === "user" ? (
-          <div key={m.id} className="flex justify-end">
+      {history.map((m) => {
+        // 👇 this ensures React remounts MarkdownRenderer when message text changes
+        const key = `${m.id}-${m.content.length}`;
+
+        return m.role === "user" ? (
+          <div key={key} className="flex justify-end">
             <MessageBubble role={m.role} content={m.content} />
           </div>
         ) : (
-          <MessageBubble key={m.id} role={m.role} content={m.content} />
-        )
-      )}
+          <MessageBubble key={key} role={m.role} content={m.content} />
+        );
+      })}
     </div>
   );
 };
+

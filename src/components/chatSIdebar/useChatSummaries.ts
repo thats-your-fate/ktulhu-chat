@@ -13,7 +13,7 @@ interface UseChatSummariesOptions {
 }
 
 /* ---------------------------------------------------
- 🧱 Shared reactive store (used by all hook instances)
+  Shared reactive store (used by all hook instances)
 --------------------------------------------------- */
 let globalChats: ChatSummary[] = [];
 const subscribers = new Set<React.Dispatch<React.SetStateAction<ChatSummary[]>>>();
@@ -48,6 +48,7 @@ export function useChatSummaries({
     globalChats = [msg, ...globalChats.filter((c) => c.chat_id !== msg.chat_id)].sort(
       (a, b) => b.ts - a.ts
     );
+    console.log(globalChats)
     notifyAll();
   }, []);
 

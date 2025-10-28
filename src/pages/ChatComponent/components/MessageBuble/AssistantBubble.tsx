@@ -19,7 +19,7 @@ export const AssistantBubble: React.FC<AssistantBubbleProps> = ({ content }) => 
       `}
     >
       {containsCode ? (
-        <MarkdownRenderer content={content} />
+        <MarkdownRenderer key={content.length} content={content} />
       ) : (
         <p className="whitespace-pre-wrap">{content}</p>
       )}
