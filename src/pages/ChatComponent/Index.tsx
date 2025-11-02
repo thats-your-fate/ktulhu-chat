@@ -6,9 +6,8 @@ import { useInferSocket } from "../../hooks/useInferSocket";
 import { useChatStore } from "../../store/useChatStore";
 import { useSession } from "../../context/SessionContext";
 import { getSocketEndpoint } from "../../components/lib/getSocketEndpoint";
-
 import { MessageList } from "./components/MessageList";
-import { ChatInput } from "./components/ChatInput";
+import { InputArea } from "../../components/ui/input";
 
 const DEFAULT_MODEL = "mistral-7b-lora";
 
@@ -21,6 +20,26 @@ export default function ChatComponent() {
   const [model] = useState(DEFAULT_MODEL);
   const { sendPrompt, cancel, addHandlers } = useInferSocket(endpoint);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  /* 🧩 Utility to unwrap and clean content safely */
+  const safeNormalize = useCallback((content: any): string => {
+    if (typeof content !== "string") return String(content ?? "");
+    let result = content;
+
+    // Unwrap JSON strings like "{\"text\":\"Hi\"}"
+    if (result.trim().startsWith("{")) {
+      try {
+        const parsed = JSON.parse(result);
+        if (parsed?.text) result = parsed.text;
+      } catch {
+        /* ignore parse errors */
+      }
+    }
+
+    // Remove hidden Vision Context hints
+    result = result.replace(/\[Vision Context\]:.*$/s, "").trim();
+    return result;
+  }, []);
 
   // 🧠 Load existing messages for this chat
   useEffect(() => {
@@ -35,18 +54,26 @@ export default function ChatComponent() {
           return;
         }
 
-        const data = await res.json().catch(() => ({}));
+        const text = await res.text();
+        let data: any = {};
+        try {
+          data = JSON.parse(text);
+        } catch {
+          console.warn("⚠️ Invalid backend JSON:", text);
+          data = {};
+        }
+
         const msgs = Array.isArray(data.messages)
           ? data.messages.map((m: any, i: number) => ({
               id: `${chatId}-${i}`,
               role: m.role || "assistant",
-              content: m.text || m.summary || "",
+              content: safeNormalize(m.text || m.summary || ""),
               ts: m.ts || Date.now(),
             }))
           : [];
 
         clear();
-        for (const msg of msgs) add(msg);
+        msgs.forEach(add);
         console.log(`📥 Reloaded ${msgs.length} messages for chat ${chatId}`);
       } catch (err) {
         console.error("❌ Failed to reload messages:", err);
@@ -54,7 +81,7 @@ export default function ChatComponent() {
     };
 
     fetchMessages();
-  }, [chatId, clear, add]);
+  }, [chatId, clear, add, safeNormalize]);
 
   // Auto-scroll on new message
   useEffect(() => {
@@ -64,56 +91,66 @@ export default function ChatComponent() {
     });
   }, [history.length, history.at(-1)?.content]);
 
-  // WebSocket streaming for assistant messages
-  useEffect(() => {
-    let currentAssistantId: string | null = null;
 
-    const remove = addHandlers({
-      onAny: (msg) => {
-        if (!currentAssistantId && msg?.token) {
-          currentAssistantId = uuidv4();
-          add({ id: currentAssistantId, role: "assistant", content: "" });
-        }
-      },
-      onToken: (t) => currentAssistantId && patch(currentAssistantId, t),
-      onDone: () => {
-        setIsSending(false);
-        currentAssistantId = null;
-      },
-    });
 
-    return () => remove();
-  }, [add, patch, addHandlers]);
+useEffect(() => {
+  let currentAssistantId: string | null = null;
 
-  // 🧩 Send message (JSON payload instead of text)
+  const remove = addHandlers({
+    onAny: (msg: { token?: string }) => {
+      if (!currentAssistantId && msg?.token) {
+        currentAssistantId = uuidv4();
+        add({
+          id: currentAssistantId,
+          role: "assistant",
+          content: "",
+        });
+      }
+    },
+    onToken: (t: string) => {
+      if (currentAssistantId) {
+        patch(currentAssistantId, t);
+      }
+    },
+    onDone: () => {
+      setIsSending(false);
+      currentAssistantId = null;
+    },
+  });
+
+  // 🧹 Proper cleanup when component unmounts
+  return () => {
+    remove?.();
+  };
+}, [addHandlers, add, patch, setIsSending]);
+
+  // 🧩 Send message
   const handleSend = useCallback(async () => {
     const trimmed = input.trim();
     if (!trimmed || isSending) return;
 
     const userId = uuidv4();
-    add({ id: userId, role: "user", content: trimmed });
+    const cleanInput = safeNormalize(trimmed);
+
+    add({ id: userId, role: "user", content: cleanInput });
     setInput("");
     setIsSending(true);
 
     try {
-      // 🧠 Collect summaries belonging to the current chat
       const summaries = history
         .filter((m) => m.role === "summary" && m.content?.trim())
         .map((m) => m.content.trim());
 
-      // 🧩 Build clean JSON payload
       const messagePayload = {
         role: "user",
         chat_id: chatId,
         model,
-        text: trimmed,
-        summaries, // ✅ structured summaries array
+        text: cleanInput,
+        summaries,
         ts: Date.now(),
       };
 
       console.log("📤 Sending JSON payload:", messagePayload);
-
-      // ✅ Send JSON directly through WebSocket
       sendPrompt(JSON.stringify(messagePayload));
     } catch (e) {
       setIsSending(false);
@@ -122,11 +159,11 @@ export default function ChatComponent() {
         ` ${e instanceof Error ? e.message : "Failed to send message"}`
       );
     }
-  }, [input, isSending, model, add, patch, sendPrompt, history, chatId]);
+  }, [input, isSending, model, add, patch, sendPrompt, history, chatId, safeNormalize]);
 
   return (
     <Container className="h-[calc(100vh-6rem)] flex justify-center">
-      <Pannel className="flex flex-col w-full max-w-4xl h-full relative rounded-2xl overflow-hidden">
+      <Pannel className="flex flex-col w-full  h-full relative  overflow-hidden">
         <PannelBody
           ref={scrollRef as any}
           className="flex-1 overflow-y-auto pb-[120px] transition-all"
@@ -134,15 +171,15 @@ export default function ChatComponent() {
           <MessageList history={history} />
         </PannelBody>
 
-        <div className="absolute bottom-0 left-0 right-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 px-4 py-3">
-          <ChatInput
-            input={input}
-            setInput={setInput}
-            handleSend={handleSend}
-            isSending={isSending}
-            cancel={cancel}
-            clear={clear}
-          />
+        <div className="absolute bottom-0 left-0 right-0  backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 px-4 py-3">
+<InputArea
+  value={input}
+  onChange={setInput}
+  onSend={() => handleSend()} // optional
+  placeholder="Send a message..."
+  className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm"
+/>
+
           <div className="text-xs text-gray-500 mt-2">
             Chat: {chatId} • Model: {model}
           </div>

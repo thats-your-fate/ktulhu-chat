@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useMemo } from "react";
-import { useLocalStorage } from "../hooks/useLocalStorage";
+import { useCallback, useEffect, useState } from "react";
 import { useSession } from "../context/SessionContext";
 
 export interface ChatMessage {
@@ -10,59 +9,99 @@ export interface ChatMessage {
 }
 
 /**
- * 🧠 Hook: Per-chat message store + backend sync
- * LocalStorage key pattern: "ktulhu.chat.history::<chat_id>"
+ * 🧠 Chat store that stays in sync with backend
+ * ✅ Fetches on mount
+ * ✅ Deduplicates automatically
+ * ✅ Keeps chronological order
  */
 export function useChatStore() {
   const { chatId } = useSession();
+  const [history, setHistory] = useState<ChatMessage[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // Per-chat LocalStorage key
-  const key = useMemo(() => `ktulhu.chat.history::${chatId}`, [chatId]);
+  /** Helper: safely unwrap nested JSON */
+  const safeParse = (input: any): any => {
+    if (typeof input !== "string") return input;
+    try {
+      const parsed = JSON.parse(input);
+      return typeof parsed === "string" ? safeParse(parsed) : parsed;
+    } catch {
+      return input;
+    }
+  };
 
-  // Messages for this chat (persisted locally)
-  const [history, setHistory] = useLocalStorage<ChatMessage[]>(key, []);
+  /** Helper: normalize text */
+  const normalizeContent = (raw: any): string => {
+    let content = raw?.text || raw?.summary || "";
+    if (typeof content === "string" && content.trim().startsWith("{")) {
+      const parsed = safeParse(content);
+      if (parsed && parsed.text) content = parsed.text;
+    }
+    if (typeof content === "string") {
+      content = content.replace(/\[Vision Context\]:.*$/s, "").trim();
+    }
+    return content;
+  };
 
-  /**
-   * 🔄 Fetch full message list for this chat from backend
-   * Endpoint: /chat-thread/:chat_id
-   */
+  /** 🔄 Fetch backend messages (with dedup + sort) */
   useEffect(() => {
     if (!chatId) return;
+    let cancelled = false;
 
     const fetchMessages = async () => {
+      setLoading(true);
       try {
         const res = await fetch(`/chat-thread/${chatId}`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
+        const text = await res.text();
+        if (!res.ok) throw new Error(`HTTP ${res.status}: ${text}`);
 
-        // Transform backend JSON → ChatMessage[]
-        const msgs: ChatMessage[] = (data.messages || []).map(
-          (m: any, i: number) => ({
-            id: `${chatId}-${i}`,
-            role: m.role || "assistant",
-            content: m.text || m.summary || "",
-            ts: m.ts || Date.now(),
+        let data: any = {};
+        try {
+          data = text ? JSON.parse(text) : { messages: [] };
+        } catch {
+          console.warn("⚠️ Invalid JSON:", text);
+        }
+
+        const msgs: ChatMessage[] = (Array.isArray(data?.messages) ? data.messages : [])
+          .map((m: any, i: number) => {
+            const safeMsg = safeParse(m);
+            return {
+              id:
+                safeMsg.id ??
+                `${chatId}-${safeMsg.role ?? "assistant"}-${i}-${safeMsg.ts ?? Date.now()}`,
+              role: safeMsg.role ?? "assistant",
+              content: normalizeContent(safeMsg),
+              ts: safeMsg.ts ?? Date.now(),
+            };
           })
-        );
+          // sort chronologically
+          .sort((a, b) => (a.ts ?? 0) - (b.ts ?? 0));
 
-        // Replace local history
-        setHistory(msgs);
-        console.log(`📥 Loaded ${msgs.length} messages for chat ${chatId}`);
+        if (!cancelled) {
+          setHistory((prev) => dedupe([...prev, ...msgs]));
+          console.log(`📥 Loaded ${msgs.length} (deduped) for chat ${chatId}`);
+        }
       } catch (err) {
-        console.error("❌ Failed to fetch messages:", err);
+        if (!cancelled) console.error("❌ Failed to fetch messages:", err);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchMessages();
-  }, [chatId, setHistory]);
+    return () => {
+      cancelled = true;
+    };
+  }, [chatId]);
 
-  /** ➕ Add a message locally */
+  /** ➕ Add message safely (no duplicates) */
   const add = useCallback(
-    (m: ChatMessage) => setHistory((h) => [...h, m]),
-    [setHistory]
+    (m: ChatMessage) =>
+      setHistory((h) => dedupe([...h, m]).sort((a, b) => (a.ts ?? 0) - (b.ts ?? 0))),
+    []
   );
 
-  /** ✏️ Append a streaming chunk to existing message */
+  /** ✏️ Patch message by ID */
   const patch = useCallback(
     (id: string, chunk: string) =>
       setHistory((h) =>
@@ -70,11 +109,19 @@ export function useChatStore() {
           m.id === id ? { ...m, content: m.content + chunk } : m
         )
       ),
-    [setHistory]
+    []
   );
 
-  /** 🧹 Clear current chat’s history */
-  const clear = useCallback(() => setHistory([]), [setHistory]);
+  const clear = useCallback(() => setHistory([]), []);
 
-  return { history, add, patch, clear } as const;
+  return { history, add, patch, clear, loading } as const;
+}
+
+/** 🧩 Helper: remove duplicates by ID */
+function dedupe(list: ChatMessage[]): ChatMessage[] {
+  const map = new Map<string, ChatMessage>();
+  for (const msg of list) {
+    map.set(msg.id, msg);
+  }
+  return Array.from(map.values());
 }

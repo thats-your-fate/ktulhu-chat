@@ -4,7 +4,7 @@ import type { WSStatus } from "../hooks/useInferSocket";
 import { getSocketEndpoint } from "../components/lib/getSocketEndpoint";
 
 type SocketContextType = {
-  wsRef: React.MutableRefObject<WebSocket | null>; // 👈 direct access
+  wsRef: React.MutableRefObject<WebSocket | null>; 
   status: WSStatus;
   lastError?: string | null;
   sendPrompt: (prompt: string, opts?: any) => void;

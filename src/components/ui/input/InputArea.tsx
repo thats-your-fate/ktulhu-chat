@@ -1,49 +1,117 @@
-import React, { useRef, useEffect } from "react";
-import { StatusButton, FileUploader } from "./index";
+import React, { useState, useRef, useEffect } from "react";
+import { StatusButton } from "./StatusButton";
+import { FileUploader } from "./index";
+import { useSocketContext } from "../../../context/SocketContext";
+
+
+// types.ts
+   interface WSMessage {
+  token?: string;
+  done?: boolean;
+  type?: string;
+  [key: string]: unknown;
+}
+
+
+
 export const InputArea: React.FC<{
   value: string;
   onChange: (val: string) => void;
   onKeyDown?: React.KeyboardEventHandler<HTMLTextAreaElement>;
+  onSend?: (finalPrompt: string) => Promise<void> | void;
   placeholder?: string;
   className?: string;
-  RightButton?: React.ReactNode; // 👈 new prop
-}> = ({ value, onChange, onKeyDown, placeholder, className = "", RightButton }) => {
+}> = ({
+  value,
+  onChange,
+  onKeyDown,
+  onSend,
+  placeholder,
+  className = "",
+}) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { addHandlers, sendPrompt } = useSocketContext();
+  const [hiddenLabels, setHiddenLabels] = useState<string[]>([]);
+  const [status, setStatus] = useState<"idle" | "thinking">("idle");
 
-  const autoResize = () => {
+  // Auto-resize textarea height
+  useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
-    const maxHeight = window.innerHeight * 0.4;
-    el.style.height = `${Math.min(el.scrollHeight, maxHeight)}px`;
+    el.style.height = `${Math.min(el.scrollHeight, window.innerHeight * 0.4)}px`;
+  }, [value]);
+
+
+  // Handle image labels
+  const handleLabelsDetected = (labels: string[]) => {
+    if (!labels.length) return;
+    const appended = `${value.trim()} ${labels.join(", ")}`.trim();
+    onChange(appended);
+    setHiddenLabels(labels);
   };
 
-  useEffect(() => {
-    autoResize();
-  }, [value]);
+  // React to WS stream lifecycle
+
+useEffect(() => {
+  const remove = addHandlers({
+    onAny: (msg: WSMessage) => {
+      if (msg.token) setStatus("thinking");
+      if (msg.done) setStatus("idle");
+    },
+  });
+  return remove;
+}, [addHandlers]);
+
+  const handleSend = async () => {
+    if (!value.trim() || status === "thinking") return;
+
+    setStatus("thinking"); // immediate visual feedback
+
+    let visionContext = "";
+    if (hiddenLabels.length > 0) {
+      try {
+        visionContext = `\n[Vision Context]: ${JSON.stringify({ labels: hiddenLabels })}\n`;
+      } catch {
+        visionContext = `\n[Vision Context]: labels: ${hiddenLabels.join(", ")}\n`;
+      }
+    }
+
+    const finalPrompt = `${value.trim()}${visionContext}`;
+    try {
+      onSend?.(finalPrompt);
+      sendPrompt(finalPrompt);
+    } finally {
+      onChange("");
+      setHiddenLabels([]);
+      // Fallback reset if WS never sends done
+      setTimeout(() => setStatus("idle"), 20000);
+    }
+  };
 
   return (
     <div
       className={`
-        relative flex items-end w-full
-        border border-gray-300 dark:border-gray-700
-        rounded-xl
-        focus-within:ring-2 focus-within:ring-blue-500
-        transition-all duration-150 ease-in-out
-        ${className}
+        relative flex items-end w-full border border-gray-300 dark:border-gray-700
+        rounded-xl focus-within:ring-2 focus-within:ring-blue-500
+        transition-all duration-150 ease-in-out ${className}
       `}
     >
-      {/* Left icon (optional) */}
-      <div className="flex-shrink-0 p-2 flex items-end" >
-<FileUploader/>
+      <div className="flex-shrink-0 p-2 flex items-end">
+        <FileUploader onLabelsDetected={handleLabelsDetected} />
       </div>
 
-      {/* Textarea */}
       <textarea
         ref={textareaRef}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        onKeyDown={onKeyDown}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            handleSend();
+          }
+          onKeyDown?.(e);
+        }}
         placeholder={placeholder ?? "Type a message..."}
         rows={1}
         className={`
@@ -52,18 +120,14 @@ export const InputArea: React.FC<{
           placeholder-gray-500 dark:placeholder-gray-400
           focus:outline-none
           min-h-[3rem] max-h-[40vh]
-          overflow-hidden
-          px-2  /* leave space for button */
+          overflow-hidden px-2
         `}
-        style={{ lineHeight: "1.5" }}
+        disabled={status === "thinking"}
       />
 
-      {/* Right dynamic button (inside textarea area) */}
-
-  <div className="absolute right-2 bottom-2 flex items-center text-sm bg-chat-item-bg text-chat-item-text dark:bg-chat-item-bg-dark dark:text-chat-item-text-dark rounded-md px-2 py-1">
-    <StatusButton/>
-  </div>
-
+      <div className="absolute right-2 bottom-2 flex items-center">
+        <StatusButton status={status} onClick={handleSend} />
+      </div>
     </div>
   );
 };

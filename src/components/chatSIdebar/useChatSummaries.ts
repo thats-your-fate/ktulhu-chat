@@ -9,7 +9,7 @@ export interface ChatSummary {
 
 interface UseChatSummariesOptions {
   baseUrl?: string;
-  persist?: boolean; // optional localStorage persistence
+  persist?: boolean;
 }
 
 /* ---------------------------------------------------
@@ -23,23 +23,26 @@ function notifyAll() {
 }
 
 /* ---------------------------------------------------
- 🧠 Hook: useChatSummaries
+ 🧠 Hook: useChatSummaries (defensive version)
 --------------------------------------------------- */
 export function useChatSummaries({
-  baseUrl = "http://localhost:8080",
+  baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080",
   persist = false,
 }: UseChatSummariesOptions = {}) {
+
   const [chats, setChats] = useState<ChatSummary[]>(globalChats);
   const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimer = useRef<NodeJS.Timeout | null>(null);
+const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Subscribe to global store
-  useEffect(() => {
-    subscribers.add(setChats);
-    return () => {
-      subscribers.delete(setChats);
-    };
-  }, []);
+
+  /* Subscribe to global store */
+useEffect(() => {
+  subscribers.add(setChats);
+  return () => {
+    subscribers.delete(setChats);
+  };
+}, []);
+
 
   /* ---------------------------------------------------
    🪄 Store manipulation helpers
@@ -48,7 +51,6 @@ export function useChatSummaries({
     globalChats = [msg, ...globalChats.filter((c) => c.chat_id !== msg.chat_id)].sort(
       (a, b) => b.ts - a.ts
     );
-    console.log(globalChats)
     notifyAll();
   }, []);
 
@@ -63,10 +65,11 @@ export function useChatSummaries({
   }, []);
 
   /* ---------------------------------------------------
-   💾 Optional: persistence (localStorage)
+   💾 Optional: persistence
   --------------------------------------------------- */
   useEffect(() => {
     if (!persist) return;
+
     try {
       const saved = localStorage.getItem("ktulhu.chatSummaries");
       if (saved) {
@@ -94,15 +97,38 @@ export function useChatSummaries({
   }, [persist]);
 
   /* ---------------------------------------------------
-   🧠 Initial load via REST
+   🧠 Initial load via REST (super defensive)
   --------------------------------------------------- */
   useEffect(() => {
     let isMounted = true;
+
+    const safeParse = (input: string): any => {
+      try {
+        const first = JSON.parse(input);
+        // handle double-encoded JSON strings
+        if (typeof first === "string") {
+          try {
+            return JSON.parse(first);
+          } catch {
+            return first;
+          }
+        }
+        return first;
+      } catch {
+        return input;
+      }
+    };
+
     (async () => {
       try {
         const res = await fetch(`${baseUrl}/chat-summary/last`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
+        const text = await res.text();
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}: ${text}`);
+
+        let data = safeParse(text);
+        if (typeof data === "string") data = safeParse(data);
+
         const list: ChatSummary[] = Array.isArray(data?.chats) ? data.chats : [];
 
         if (isMounted) {
@@ -111,19 +137,36 @@ export function useChatSummaries({
           console.log(`✅ Loaded ${list.length} chats from snapshot`);
         }
       } catch (err) {
-        console.error("Failed to load chat summaries:", err);
+        console.error("❌ Failed to load chat summaries:", err);
       }
     })();
+
     return () => {
       isMounted = false;
     };
   }, [baseUrl]);
 
   /* ---------------------------------------------------
-   🌐 WebSocket live updates (auto-reconnect)
+   🌐 WebSocket live updates (auto-reconnect + defensive)
   --------------------------------------------------- */
   useEffect(() => {
     let isMounted = true;
+
+    const safeParse = (input: string): any => {
+      try {
+        const first = JSON.parse(input);
+        if (typeof first === "string") {
+          try {
+            return JSON.parse(first);
+          } catch {
+            return first;
+          }
+        }
+        return first;
+      } catch {
+        return input;
+      }
+    };
 
     function connectWS() {
       const wsUrl = baseUrl.replace(/^http/, "ws") + "/chat-summary/ws";
@@ -134,9 +177,9 @@ export function useChatSummaries({
 
       ws.onmessage = (event) => {
         try {
-          const raw = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
-          if (!raw.chat_id) return; // ignore malformed
-          upsert(raw);
+          const data = typeof event.data === "string" ? safeParse(event.data) : event.data;
+          if (!data?.chat_id) return;
+          upsert(data);
         } catch (err) {
           console.error("Invalid WS message:", err, event.data);
         }

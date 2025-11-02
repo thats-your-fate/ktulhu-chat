@@ -1,9 +1,9 @@
 import React from "react";
 import { MessageBubble } from "./MessageBuble";
 
-interface Message {
+export interface Message {
   id: string;
-  role: string;
+  role: "user" | "assistant";
   content: string;
 }
 
@@ -11,30 +11,35 @@ interface MessageListProps {
   history: Message[];
 }
 
+/**
+ * 💬 MessageList
+ * Displays chat messages in correct order.
+ * Uses stable keys and minimal re-renders.
+ */
 export const MessageList: React.FC<MessageListProps> = ({ history }) => {
-  if (history.length === 0) {
+  if (!history?.length) {
     return (
-      <div className="text-center text-gray-500 py-12">
-        Start a conversation. Your messages stay in this browser only.
+      <div className="flex items-center justify-center h-[60vh] select-none">
+        <div className="text-center text-gray-500 dark:text-gray-400">
+          <p className="text-base font-medium mb-1">Start a conversation</p>
+          <p className="text-sm opacity-75">
+            Your messages stay in this browser only.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-3">
-      {history.map((m) => {
-        // 👇 this ensures React remounts MarkdownRenderer when message text changes
-        const key = `${m.id}-${m.content.length}`;
-
-        return m.role === "user" ? (
-          <div key={key} className="flex justify-end">
-            <MessageBubble role={m.role} content={m.content} />
-          </div>
-        ) : (
-          <MessageBubble key={key} role={m.role} content={m.content} />
-        );
-      })}
+      {history.map((m) => (
+        <div
+          key={m.id} // ✅ stable key based on message id
+          className={m.role === "user" ? "flex justify-end" : "flex justify-start"}
+        >
+          <MessageBubble role={m.role} content={m.content} />
+        </div>
+      ))}
     </div>
   );
 };
-

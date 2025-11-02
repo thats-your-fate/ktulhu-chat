@@ -48,10 +48,10 @@ export const ChatSidebarMobile: React.FC<ChatSidebarMobileProps> = ({ onSelectCh
         >
           <aside
             onClick={(e) => e.stopPropagation()}
-            className="absolute left-0 top-0 h-full w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col animate-slideIn"
+            className="absolute left-0 top-0 h-full w-64 bg-white dark:bg-gray-900 flex flex-col animate-slideIn"
           >
             {/* Header */}
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <div className="p-4  flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
                 Recent Chats
               </h2>
@@ -61,14 +61,7 @@ export const ChatSidebarMobile: React.FC<ChatSidebarMobileProps> = ({ onSelectCh
                   className="bg-transparent text-chat-item-text dark:text-chat-item-text-dark"
                 >
                   + New
-                </button>
-                <button
-                  onClick={clear}
-                  className="bg-transparent text-chat-item-text dark:text-chat-item-text-dark"
-                  title="Clear all"
-                >
-                  🗑
-                </button>
+                </button> 
               </div>
             </div>
 

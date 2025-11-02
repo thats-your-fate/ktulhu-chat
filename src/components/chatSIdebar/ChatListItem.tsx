@@ -32,9 +32,8 @@ export const ChatListItem: React.FC<ChatListItemProps> = ({
 
 return (
    <button onClick={() => onSelect(chatId)} className={clsx(
-     "w-full text-left px-4 py-2 rounded-md transition-colors duration-150",
-     "border border-transparent outline-none ",
-     isActive ? "bg-transparent text-black dark:bg-gray-600 dark:text-white" : "bg-transparent text-chat-item-text dark:text-chat-item-text-dark"
+     "w-full text-left px-4 pr-0 py-2 rounded-none ",
+     isActive ? "bg-gray-400 text-black dark:bg-gray-600 dark:text-white" : "bg-gray-200 text-black dark:bg-transparent  dark:text-white "
    )}>
      <div className="flex justify-between items-center">
        <span className={clsx(
@@ -46,7 +45,7 @@ return (
        {time && (
          <span className={clsx(
            "text-xs",
-           isActive ? "text-white/80" : "opacity-70"
+           isActive ? "" : ""
          )}>
            {time}
          </span>

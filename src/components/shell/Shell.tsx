@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { Container } from "../ui/Container";
 import { ShellHeaderDesktop, ShellHeaderMobile } from "./ShellHeader";
@@ -7,42 +7,22 @@ import { useIsMobile } from "../../hooks/useIsMobile";
 import { ChatSidebar } from "../chatSIdebar";
 import { ChatSidebarMobile } from "../chatSIdebar/ChatSidebarMobile";
 
-export const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const Shell: React.FC<{ children: React.ReactNode }> = React.memo(({ children }) => {
   const location = useLocation();
   const [endpoint, setEndpoint] = useState(getSocketEndpoint());
   const isMobile = useIsMobile(768);
 
-  const handleSwap = () => {
-    const current =
-      sessionStorage.getItem("ws_endpoint") ||
-      localStorage.getItem("ws_endpoint") ||
-      endpoint;
-
-    const next = prompt("Enter WebSocket endpoint:", current || endpoint);
-
-    if (next) {
-      try {
-        sessionStorage.setItem("ws_endpoint", next);
-      } catch {
-        localStorage.setItem("ws_endpoint", next);
-      }
-      setEndpoint(next);
-      window.location.reload();
-    }
-  };
-
-  const navLinks = [
-    { path: "/", label: "Chat" },
-    { path: "/settings", label: "Settings" },
-    { path: "/about", label: "About" },
-    { path: "/logs", label: "Logs" },
-  ];
-
-  const toggleTheme = () => {
+  /* --------------------------------------------------------
+   🧠 Stable theme toggle
+  -------------------------------------------------------- */
+  const toggleTheme = useCallback(() => {
     const html = document.documentElement;
     html.classList.toggle("dark");
-    localStorage.setItem("theme", html.classList.contains("dark") ? "dark" : "light");
-  };
+    localStorage.setItem(
+      "theme",
+      html.classList.contains("dark") ? "dark" : "light"
+    );
+  }, []);
 
   useEffect(() => {
     if (localStorage.getItem("theme") === "dark") {
@@ -50,6 +30,51 @@ export const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     }
   }, []);
 
+  /* --------------------------------------------------------
+   🔌 Endpoint switcher
+  -------------------------------------------------------- */
+  const handleSwap = useCallback(() => {
+    const current =
+      sessionStorage.getItem("ws_endpoint") ||
+      localStorage.getItem("ws_endpoint") ||
+      endpoint;
+
+    const next = prompt("Enter WebSocket endpoint:", current || endpoint);
+    if (!next) return;
+
+    try {
+      sessionStorage.setItem("ws_endpoint", next);
+    } catch {
+      localStorage.setItem("ws_endpoint", next);
+    }
+    setEndpoint(next);
+    window.location.reload();
+  }, [endpoint]);
+
+  /* --------------------------------------------------------
+   🧭 Static navigation (memoized once)
+  -------------------------------------------------------- */
+  const navLinks = useMemo(
+    () => [
+      { path: "/", label: "Chat" },
+      { path: "/settings", label: "Settings" },
+      { path: "/about", label: "About" },
+      { path: "/logs", label: "Logs" },
+    ],
+    []
+  );
+
+  /* --------------------------------------------------------
+   🧱 Memoized sidebar (prevents re-mounts)
+  -------------------------------------------------------- */
+  const MemoizedSidebar = useMemo(
+    () => <ChatSidebar onSelectChat={(id) => console.log("Open chat:", id)} />,
+    []
+  );
+
+  /* --------------------------------------------------------
+   🧩 Layout
+  -------------------------------------------------------- */
   return (
     <div
       className={`
@@ -61,19 +86,17 @@ export const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => 
       {/* Header */}
       {isMobile ? (
         <div className="flex items-center justify-between border-b border-header-border dark:border-header-border-dark bg-header-bg dark:bg-header-bg-dark px-2 py-2">
-          {/* 🟢 Mobile sidebar burger (left side of header) */}
+          {/* 🟢 Mobile sidebar burger */}
           <ChatSidebarMobile onSelectChat={(id) => console.log("Open chat:", id)} />
 
-          {/* Regular mobile header (right side of header area) */}
-          {/*  /*
-          <ShellHeaderMobile
+          {/* Optional mobile header (currently commented out) */}
+          {/* <ShellHeaderMobile
             location={location}
             navLinks={navLinks}
             endpoint={endpoint}
             onSwap={handleSwap}
             onToggleTheme={toggleTheme}
-          />
-          */}
+          /> */}
         </div>
       ) : (
         <ShellHeaderDesktop
@@ -89,9 +112,9 @@ export const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => 
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Desktop sidebar */}
         {!isMobile && (
-          <aside className="hidden md:flex md:w-2/12 lg:w-2/12 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700">
-            <ChatSidebar onSelectChat={(id) => console.log("Open chat:", id)} />
-          </aside>
+          <div className="hidden md:flex md:w-2/12 lg:w-2/12 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700">
+            {MemoizedSidebar}
+          </div>
         )}
 
         {/* Main content */}
@@ -112,4 +135,4 @@ export const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => 
       </footer>
     </div>
   );
-};
+});

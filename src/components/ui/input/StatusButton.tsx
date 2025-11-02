@@ -1,49 +1,51 @@
 import React from "react";
 import { SvgIcon } from "../SvgIcon";
 
+export type StatusType = "idle" | "thinking";
+
 interface StatusButtonProps {
-  /** Whether the system is currently recording audio */
-  isRecording?: boolean;
-  /** Whether the system is currently processing or busy */
-  isProcessing?: boolean;
-  /** Callback when clicked */
+  status?: StatusType;
   onClick?: () => void;
+  /** optional overrides if your icon names differ */
+  icons?: {
+    idle?: string;      // default: "petir"
+    thinking?: string;  // default: "loader" (falls back to "petir" if missing)
+  };
 }
 
 export const StatusButton: React.FC<StatusButtonProps> = ({
-  isRecording = false,
-  isProcessing = false,
+  status = "idle",
   onClick,
+  icons,
 }) => {
-  // Decide which icon to show
-  let iconName = "petir";
-  let bgClass =
-    "text-sm bg-chat-item-bg text-chat-item-text dark:bg-chat-item-bg-dark dark:text-chat-item-text-dark rounded-md px-0 py-1";
+  const isThinking = status === "thinking";
 
-  if (isRecording) {
-    iconName = "stop";
-    bgClass =
-      "bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600";
-  } else if (isProcessing) {
-    iconName = "mic"; // use airplane while "sending" or processing
-    bgClass =
-      "bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600";
-  }
+  const idleIcon = icons?.idle ?? "petir";
+  const thinkingIcon = icons?.thinking ?? "loader";
+
+  // if you don't have a "loader" icon, we'll spin the old one
+  const useFallbackSpin = thinkingIcon === "loader" ? false : true;
 
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={!isThinking ? onClick : undefined}
+      disabled={isThinking}
       className={`
         flex items-center justify-center
-        rounded-md p-2 transition-colors duration-150
-        text-white ${bgClass}
+        rounded-md p-2 transition-opacity duration-150
+        text-chat-item-text dark:text-chat-item-text-dark
+        bg-chat-item-bg dark:bg-chat-item-bg-dark
+        ${isThinking ? "opacity-80 cursor-wait" : ""}
       `}
-      title={
-        isRecording ? "Stop recording" : isProcessing ? "Sending..." : "Start recording"
-      }
+      title={isThinking ? "Generating..." : "Send"}
     >
-      <SvgIcon name={iconName} size={18} color="white" />
+      <SvgIcon
+        name={isThinking ? thinkingIcon : idleIcon}
+        size={18}
+        color="currentColor"
+        className={isThinking ? (useFallbackSpin ? "animate-spin" : "") : ""}
+      />
     </button>
   );
 };

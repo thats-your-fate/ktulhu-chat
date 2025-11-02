@@ -79,7 +79,7 @@ export default {
         "message-user-bg-dark": "#4c515aff",          // lighter blue for dark mode
         "message-user-text-dark": "#ffffff",
 
-                        "chat-item-bg": "#4c515aff",            // brand primary (blue-600)
+        "chat-item-bg": "#4c515aff",            // brand primary (blue-600)
         "chat-item-text": "#ffffff",
         "chat-item-bg-dark": "#4c515aff",          // lighter blue for dark mode
         "chat-item-text-dark": "#ffffff",

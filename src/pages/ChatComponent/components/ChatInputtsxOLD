@@ -1,0 +1,39 @@
+import React from "react";
+import { InputArea } from "../../../components/ui/input";
+
+interface Props {
+  input: string;
+  setInput: (v: string) => void;
+  handleSend: (prompt?: string) => void;
+  isSending: boolean;
+  cancel: () => void;
+  clear: () => void;
+}
+
+export const ChatInput: React.FC<Props> = ({
+  input,
+  setInput,
+  handleSend,
+  isSending,
+  cancel,
+  clear,
+}) => {
+  return (
+    <div
+      className={`
+        absolute bottom-0 left-0 right-0
+        flex items-end gap-3
+        bg-app-bg/95 dark:bg-app-bg-dark/95
+        backdrop-blur-sm
+        px-3 py-3
+      `}
+    >
+      <InputArea
+        value={input}
+        onChange={setInput}
+        onSend={handleSend}
+        className="w-full"
+      />
+    </div>
+  );
+};
