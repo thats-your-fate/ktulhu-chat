@@ -10,7 +10,7 @@ interface ChatSidebarMobileProps {
 
 export const ChatSidebarMobile: React.FC<ChatSidebarMobileProps> = ({ onSelectChat }) => {
   const { chatId, setChatId } = useSession();
-  const { chats, upsert, clear } = useChatSummaries();
+  const { chats, upsert } = useChatSummaries();
   const [isOpen, setIsOpen] = useState(false);
 
   const handleSelectChat = (id: string) => {

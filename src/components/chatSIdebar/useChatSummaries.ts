@@ -13,7 +13,7 @@ interface UseChatSummariesOptions {
 }
 
 /* ---------------------------------------------------
-  Shared reactive store (used by all hook instances)
+  Shared global reactive store
 --------------------------------------------------- */
 let globalChats: ChatSummary[] = [];
 const subscribers = new Set<React.Dispatch<React.SetStateAction<ChatSummary[]>>>();
@@ -23,29 +23,42 @@ function notifyAll() {
 }
 
 /* ---------------------------------------------------
- 🧠 Hook: useChatSummaries (defensive version)
+  🌐 Utility: sanitize API + WS URLs
+--------------------------------------------------- */
+function normalizeBaseUrl(url: string): string {
+  return url.replace(/\/+$/, ""); // remove trailing slashes
+}
+
+function makeWsUrl(baseUrl: string): string {
+  const clean = normalizeBaseUrl(baseUrl);
+  if (clean.startsWith("https://")) return clean.replace(/^https:\/\//, "wss://") + "/chat-summary/ws";
+  if (clean.startsWith("http://")) return clean.replace(/^http:\/\//, "ws://") + "/chat-summary/ws";
+  return "wss://" + clean + "/chat-summary/ws";
+}
+
+/* ---------------------------------------------------
+  🧠 Hook: useChatSummaries
 --------------------------------------------------- */
 export function useChatSummaries({
   baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080",
   persist = false,
 }: UseChatSummariesOptions = {}) {
-
   const [chats, setChats] = useState<ChatSummary[]>(globalChats);
   const wsRef = useRef<WebSocket | null>(null);
-const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-
-  /* Subscribe to global store */
-useEffect(() => {
-  subscribers.add(setChats);
-  return () => {
-    subscribers.delete(setChats);
-  };
-}, []);
-
+  const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /* ---------------------------------------------------
-   🪄 Store manipulation helpers
+    Subscription management
+  --------------------------------------------------- */
+  useEffect(() => {
+    subscribers.add(setChats);
+    return () => {
+      subscribers.delete(setChats);
+    };
+  }, []);
+
+  /* ---------------------------------------------------
+    State helpers
   --------------------------------------------------- */
   const upsert = useCallback((msg: ChatSummary) => {
     globalChats = [msg, ...globalChats.filter((c) => c.chat_id !== msg.chat_id)].sort(
@@ -65,7 +78,7 @@ useEffect(() => {
   }, []);
 
   /* ---------------------------------------------------
-   💾 Optional: persistence
+    💾 Optional persistence
   --------------------------------------------------- */
   useEffect(() => {
     if (!persist) return;
@@ -97,7 +110,7 @@ useEffect(() => {
   }, [persist]);
 
   /* ---------------------------------------------------
-   🧠 Initial load via REST (super defensive)
+    🧠 Initial load via REST
   --------------------------------------------------- */
   useEffect(() => {
     let isMounted = true;
@@ -105,7 +118,6 @@ useEffect(() => {
     const safeParse = (input: string): any => {
       try {
         const first = JSON.parse(input);
-        // handle double-encoded JSON strings
         if (typeof first === "string") {
           try {
             return JSON.parse(first);
@@ -121,9 +133,11 @@ useEffect(() => {
 
     (async () => {
       try {
-        const res = await fetch(`${baseUrl}/chat-summary/last`);
+        const api = normalizeBaseUrl(baseUrl);
+        const res = await fetch(`${api}/chat-summary/last`, {
+          headers: { "Accept": "application/json" },
+        });
         const text = await res.text();
-
         if (!res.ok) throw new Error(`HTTP ${res.status}: ${text}`);
 
         let data = safeParse(text);
@@ -147,7 +161,7 @@ useEffect(() => {
   }, [baseUrl]);
 
   /* ---------------------------------------------------
-   🌐 WebSocket live updates (auto-reconnect + defensive)
+    🌐 WebSocket (auto-reconnect)
   --------------------------------------------------- */
   useEffect(() => {
     let isMounted = true;
@@ -169,8 +183,17 @@ useEffect(() => {
     };
 
     function connectWS() {
-      const wsUrl = baseUrl.replace(/^http/, "ws") + "/chat-summary/ws";
-      const ws = new WebSocket(wsUrl);
+      const wsUrl = makeWsUrl(baseUrl);
+      console.log("🌐 Connecting WebSocket:", wsUrl);
+
+      let ws: WebSocket;
+      try {
+        ws = new WebSocket(wsUrl);
+      } catch (e) {
+        console.error("❌ Invalid WebSocket URL:", wsUrl, e);
+        return;
+      }
+
       wsRef.current = ws;
 
       ws.onopen = () => console.log("📡 Connected to /chat-summary/ws");
@@ -198,6 +221,7 @@ useEffect(() => {
     }
 
     connectWS();
+
     return () => {
       isMounted = false;
       if (reconnectTimer.current) clearTimeout(reconnectTimer.current);

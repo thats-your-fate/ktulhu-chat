@@ -63,19 +63,27 @@ export function useChatStore() {
         }
 
         const msgs: ChatMessage[] = (Array.isArray(data?.messages) ? data.messages : [])
-          .map((m: any, i: number) => {
-            const safeMsg = safeParse(m);
-            return {
-              id:
-                safeMsg.id ??
-                `${chatId}-${safeMsg.role ?? "assistant"}-${i}-${safeMsg.ts ?? Date.now()}`,
-              role: safeMsg.role ?? "assistant",
-              content: normalizeContent(safeMsg),
-              ts: safeMsg.ts ?? Date.now(),
-            };
-          })
-          // sort chronologically
-          .sort((a, b) => (a.ts ?? 0) - (b.ts ?? 0));
+// inside map()
+.map((m: any, i: number) => {
+  const safeMsg = safeParse(m);
+  const tsNum = Number(safeMsg.ts);
+  return {
+    id:
+      safeMsg.id ??
+      `${chatId}-${safeMsg.role ?? "assistant"}-${i}-${Date.now()}`,
+    role: safeMsg.role ?? "assistant",
+    content: normalizeContent(safeMsg),
+    ts: Number.isFinite(tsNum) ? tsNum : Date.now(),
+  };
+})
+// ✅ sort chronologically (always numeric)
+.sort((a: ChatMessage, b: ChatMessage) => {
+  const ta = Number(a.ts) || 0;
+  const tb = Number(b.ts) || 0;
+  return ta - tb;
+});
+
+
 
         if (!cancelled) {
           setHistory((prev) => dedupe([...prev, ...msgs]));

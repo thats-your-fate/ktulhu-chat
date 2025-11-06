@@ -9,7 +9,7 @@ interface ChatSidebarProps {
 
 export const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectChat }) => {
   const { chatId, setChatId } = useSession();
-  const { chats, upsert, clear } = useChatSummaries();
+  const { chats, upsert } = useChatSummaries();
 
   const handleSelectChat = (id: string) => {
     setChatId(id);

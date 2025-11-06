@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { Container } from "../ui/Container";
-import { ShellHeaderDesktop, ShellHeaderMobile } from "./ShellHeader";
+import { ShellHeaderDesktop } from "./ShellHeader";
 import { getSocketEndpoint } from "../lib/getSocketEndpoint";
 import { useIsMobile } from "../../hooks/useIsMobile";
 import { ChatSidebar } from "../chatSIdebar";
@@ -13,7 +13,7 @@ export const Shell: React.FC<{ children: React.ReactNode }> = React.memo(({ chil
   const isMobile = useIsMobile(768);
 
   /* --------------------------------------------------------
-   🧠 Stable theme toggle
+    Stable theme toggle
   -------------------------------------------------------- */
   const toggleTheme = useCallback(() => {
     const html = document.documentElement;
@@ -31,7 +31,7 @@ export const Shell: React.FC<{ children: React.ReactNode }> = React.memo(({ chil
   }, []);
 
   /* --------------------------------------------------------
-   🔌 Endpoint switcher
+    Endpoint switcher
   -------------------------------------------------------- */
   const handleSwap = useCallback(() => {
     const current =
@@ -52,7 +52,7 @@ export const Shell: React.FC<{ children: React.ReactNode }> = React.memo(({ chil
   }, [endpoint]);
 
   /* --------------------------------------------------------
-   🧭 Static navigation (memoized once)
+    Static navigation (memoized once)
   -------------------------------------------------------- */
   const navLinks = useMemo(
     () => [
@@ -65,7 +65,7 @@ export const Shell: React.FC<{ children: React.ReactNode }> = React.memo(({ chil
   );
 
   /* --------------------------------------------------------
-   🧱 Memoized sidebar (prevents re-mounts)
+    Memoized sidebar (prevents re-mounts)
   -------------------------------------------------------- */
   const MemoizedSidebar = useMemo(
     () => <ChatSidebar onSelectChat={(id) => console.log("Open chat:", id)} />,
@@ -88,15 +88,6 @@ export const Shell: React.FC<{ children: React.ReactNode }> = React.memo(({ chil
         <div className="flex items-center justify-between border-b border-header-border dark:border-header-border-dark bg-header-bg dark:bg-header-bg-dark px-2 py-2">
           {/* 🟢 Mobile sidebar burger */}
           <ChatSidebarMobile onSelectChat={(id) => console.log("Open chat:", id)} />
-
-          {/* Optional mobile header (currently commented out) */}
-          {/* <ShellHeaderMobile
-            location={location}
-            navLinks={navLinks}
-            endpoint={endpoint}
-            onSwap={handleSwap}
-            onToggleTheme={toggleTheme}
-          /> */}
         </div>
       ) : (
         <ShellHeaderDesktop

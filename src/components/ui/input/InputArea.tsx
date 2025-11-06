@@ -60,8 +60,13 @@ useEffect(() => {
       if (msg.done) setStatus("idle");
     },
   });
-  return remove;
+
+  // ✅ Always return a proper cleanup function
+  return () => {
+    if (typeof remove === "function") remove();
+  };
 }, [addHandlers]);
+
 
   const handleSend = async () => {
     if (!value.trim() || status === "thinking") return;

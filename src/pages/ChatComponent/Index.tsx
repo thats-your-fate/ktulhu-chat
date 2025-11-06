@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import  { useEffect, useRef, useState, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { Container } from "../../components/ui/Container";
 import { Pannel, PannelBody } from "../../components/ui/Pannel";
@@ -11,6 +11,19 @@ import { InputArea } from "../../components/ui/input";
 
 const DEFAULT_MODEL = "mistral-7b-lora";
 
+
+export interface Message {
+  id: string;
+  role: "assistant" | "user" | "system" | "summary"; // expanded
+  content: string;
+  ts?: number;
+}
+
+export interface MessageListProps {
+  history: Message[];
+}
+
+
 export default function ChatComponent() {
   const { chatId } = useSession();
   const { history, add, patch, clear } = useChatStore();
@@ -18,10 +31,10 @@ export default function ChatComponent() {
   const [isSending, setIsSending] = useState(false);
   const endpoint = getSocketEndpoint();
   const [model] = useState(DEFAULT_MODEL);
-  const { sendPrompt, cancel, addHandlers } = useInferSocket(endpoint);
+  const { sendPrompt, addHandlers } = useInferSocket(endpoint);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
-  /* 🧩 Utility to unwrap and clean content safely */
+  /*  Utility to unwrap and clean content safely */
   const safeNormalize = useCallback((content: any): string => {
     if (typeof content !== "string") return String(content ?? "");
     let result = content;
@@ -168,7 +181,8 @@ useEffect(() => {
           ref={scrollRef as any}
           className="flex-1 overflow-y-auto pb-[120px] transition-all"
         >
-          <MessageList history={history} />
+<MessageList history={history as any} />
+
         </PannelBody>
 
         <div className="absolute bottom-0 left-0 right-0  backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 px-4 py-3">

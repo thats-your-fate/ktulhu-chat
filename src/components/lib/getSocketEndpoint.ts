@@ -3,27 +3,31 @@
  * Priority:
  * 1️⃣ sessionStorage override (highest, for temporary testing)
  * 2️⃣ localStorage override (optional, for manual dev)
- * 3️⃣ Cloudflare tunnel (preferred default)
- * 4️⃣ Hardcoded fallback URL
+ * 3️⃣ Environment variable tunnel or custom WS base URL
+ * 4️⃣ Hardcoded fallback (inference.ktulhu.com)
  */
 
 export function getSocketEndpoint(): string {
   if (typeof window !== "undefined") {
-    // Session storage wins if set
+    // 1️⃣ Session storage wins if set
     const session = window.sessionStorage.getItem("ws_endpoint");
     if (session && session.trim()) return normalizeToWs(session);
 
-    // Optional: localStorage override (if still needed)
-    //const manual = window.localStorage.getItem("ws_endpoint");
-    //if (manual && manual.trim()) return normalizeToWs(manual);
+    // 2️⃣ Optional: localStorage override (if still needed)
+    // const manual = window.localStorage.getItem("ws_endpoint");
+    // if (manual && manual.trim()) return normalizeToWs(manual);
   }
 
-  // nvironment variable tunnel
-  const tunnel = (import.meta as any)?.env?.VITE_TUNNEL_URL as string | undefined;
+  // 3️⃣ Environment variables (Cloudflare tunnel or direct WS base URL)
+  const env = (import.meta as any)?.env || {};
+  const tunnel = env.VITE_TUNNEL_URL as string | undefined;
+  const webSockBase = env.VITE_WEB_SOCK_BASE_URL as string | undefined;
+
+  if (webSockBase && webSockBase.trim()) return normalizeToWs(webSockBase);
   if (tunnel && tunnel.trim()) return normalizeToWs(tunnel);
 
-  // 4´Final fallback
-  return "wss://temp-v558fr.ktulhu.com";
+  // 4️⃣ Final fallback (default)
+  return "wss://inference.ktulhu.com";
 }
 
 /** Convert http/https → ws/wss */
