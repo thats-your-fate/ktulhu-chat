@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
-import { useLocation } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { Container } from "../ui/Container";
 import { ShellHeaderDesktop } from "./ShellHeader";
 import { getSocketEndpoint } from "../lib/getSocketEndpoint";
@@ -7,7 +7,7 @@ import { useIsMobile } from "../../hooks/useIsMobile";
 import { ChatSidebar } from "../chatSIdebar";
 import { ChatSidebarMobile } from "../chatSIdebar/ChatSidebarMobile";
 
-export const Shell: React.FC<{ children: React.ReactNode }> = React.memo(({ children }) => {
+export const Shell: React.FC = React.memo(() => {
   const location = useLocation();
   const [endpoint, setEndpoint] = useState(getSocketEndpoint());
   const isMobile = useIsMobile(768);
@@ -109,9 +109,11 @@ export const Shell: React.FC<{ children: React.ReactNode }> = React.memo(({ chil
         )}
 
         {/* Main content */}
-        <main className="flex-1 min-h-0 overflow-y-auto">
-          <Container>{children}</Container>
-        </main>
+      <main className="flex-1 min-h-0 overflow-y-auto">
+        <Container>
+          <Outlet />   {/* 🔥 WHERE ROUTES GO */}
+        </Container>
+      </main>
       </div>
 
       {/* Footer */}

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { StatusButton } from "./StatusButton";
 import { FileUploader } from "./index";
-import { useSocketContext } from "../../../context/SocketContext";
+import { useSocketContext } from "../../../context/SocketProvider";
 
 
 // types.ts
@@ -68,31 +68,32 @@ useEffect(() => {
 }, [addHandlers]);
 
 
-  const handleSend = async () => {
-    if (!value.trim() || status === "thinking") return;
+const handleSend = async () => {
+  if (!value.trim() || status === "thinking") return;
 
-    setStatus("thinking"); // immediate visual feedback
+  setStatus("thinking");
 
-    let visionContext = "";
-    if (hiddenLabels.length > 0) {
-      try {
-        visionContext = `\n[Vision Context]: ${JSON.stringify({ labels: hiddenLabels })}\n`;
-      } catch {
-        visionContext = `\n[Vision Context]: labels: ${hiddenLabels.join(", ")}\n`;
-      }
-    }
-
-    const finalPrompt = `${value.trim()}${visionContext}`;
+  let visionContext = "";
+  if (hiddenLabels.length > 0) {
     try {
-      onSend?.(finalPrompt);
-      sendPrompt(finalPrompt);
-    } finally {
-      onChange("");
-      setHiddenLabels([]);
-      // Fallback reset if WS never sends done
-      setTimeout(() => setStatus("idle"), 20000);
+      visionContext = `\n[Vision Context]: ${JSON.stringify({ labels: hiddenLabels })}\n`;
+    } catch {
+      visionContext = `\n[Vision Context]: labels: ${hiddenLabels.join(", ")}\n`;
     }
-  };
+  }
+
+  const finalPrompt = `${value.trim()}${visionContext}`;
+
+  try {
+    // ❗ ONLY THIS, DO NOT SEND FROM HERE
+    onSend?.(finalPrompt);
+  } finally {
+    onChange("");
+    setHiddenLabels([]);
+    setTimeout(() => setStatus("idle"), 20000);
+  }
+};
+
 
   return (
     <div

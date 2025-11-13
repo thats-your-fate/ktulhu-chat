@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo, useState } from "react";
+import React, { createContext, useRef, useContext, useMemo, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
 type SessionContextType = {
@@ -47,15 +47,24 @@ const SessionContext = createContext<SessionContextType | undefined>(undefined);
  */
 export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const deviceHash = useMemo(() => generateDeviceHash(), []);
-  const sessionId = useMemo(() => uuidv4(), []);
-  const [chatId, setChatId] = useState(() => uuidv4());
+  const sessionIdRef = useRef(uuidv4());
+  const chatIdRef = useRef(uuidv4());
+  const [chatId, setChatId] = useState(chatIdRef.current);
 
   return (
-    <SessionContext.Provider value={{ deviceHash, sessionId, chatId, setChatId }}>
+    <SessionContext.Provider
+      value={{
+        deviceHash,
+        sessionId: sessionIdRef.current,
+        chatId,
+        setChatId,
+      }}
+    >
       {children}
     </SessionContext.Provider>
   );
 };
+
 
 export const useSession = () => {
   const ctx = useContext(SessionContext);

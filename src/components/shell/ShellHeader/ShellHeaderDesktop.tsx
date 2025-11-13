@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Container } from "../../ui/Container";
-import { useSocketContext } from "../../../context/SocketContext";
+import { useSocketContext } from "../../../context/SocketProvider";
 import type { Location } from "react-router-dom";
 
 type ShellHeaderProps = {

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { useSocketContext } from "../../../context/SocketContext";
+import { useSocketContext } from "../../../context/SocketProvider";
 import type { Location } from "react-router-dom";
 
 type ShellHeaderMobileProps = {

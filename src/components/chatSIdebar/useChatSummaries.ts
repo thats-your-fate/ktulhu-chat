@@ -227,7 +227,7 @@ export function useChatSummaries({
       if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
       wsRef.current?.close();
     };
-  }, [baseUrl, upsert]);
+  }, [baseUrl]);
 
   return { chats, upsert, remove, clear };
 }
