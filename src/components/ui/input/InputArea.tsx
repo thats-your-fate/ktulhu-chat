@@ -30,7 +30,7 @@ export const InputArea: React.FC<{
   className = "",
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { addHandlers, sendPrompt } = useSocketContext();
+  const { addHandlers } = useSocketContext();
   const [hiddenLabels, setHiddenLabels] = useState<string[]>([]);
   const [status, setStatus] = useState<"idle" | "thinking">("idle");
 
