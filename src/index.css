@@ -1,7 +1,7 @@
 
 @import "highlight.js/styles/github-dark.css";
-/* Adobe Fonts: Myriad Pro */
-@import url("https://p.typekit.net/p.css?s=1&k=jue5pfp&ht=tk&f=6808.6846&a=354888889&app=typekit&e=css");
+
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -54,7 +54,7 @@ html body {
   --color-bg: #ffffff;
   --color-surface: #f8fafc;
 
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: "Roboto";
   line-height: 1.5;
   font-weight: 400;
 

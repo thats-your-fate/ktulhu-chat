@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { useSession } from "./SessionContext";
-import { getSocketEndpoint } from "../components/lib/getSocketEndpoint";
+import { getSocketEndpoint } from "../utils/getSocketEndpoint";
 
 type WSStatus = "idle" | "connecting" | "open" | "closed" | "error";
 

@@ -2,7 +2,7 @@ import React, { Suspense } from "react";
 import type { Prism as SyntaxHighlighterType } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
-// ✅ Lazy-load only the Prism highlighter
+
 const LazySyntaxHighlighter = React.lazy(async () => {
   const mod = await import("react-syntax-highlighter");
   return { default: (mod as { Prism: typeof SyntaxHighlighterType }).Prism };

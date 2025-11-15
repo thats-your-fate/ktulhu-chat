@@ -6,8 +6,7 @@ interface AssistantBubbleProps {
 }
 
 export const AssistantBubble: React.FC<AssistantBubbleProps> = ({ content }) => {
-  const containsCode = content.includes("`");
-
+console.log("ASSISTANT BUBBLE CONTENT:", JSON.stringify(content));
   return (
     <div
       id="model-answer"
@@ -18,11 +17,8 @@ export const AssistantBubble: React.FC<AssistantBubbleProps> = ({ content }) => 
         space-y-4
       `}
     >
-      {containsCode ? (
         <MarkdownRenderer key={content.length} content={content} />
-      ) : (
-        <p className="whitespace-pre-wrap">{content}</p>
-      )}
+
     </div>
   );
 };

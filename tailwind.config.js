@@ -115,8 +115,7 @@ export default {
       },
 
       fontFamily: {
-        sans: ['"myriad-pro"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        condensed: ['"myriad-pro-condensed"', 'sans-serif'],
+        sans: ["Roboto", "sans-serif"],
       },
 
       maxWidth: {

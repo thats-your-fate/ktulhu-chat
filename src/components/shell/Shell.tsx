@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { Container } from "../ui/Container";
 import { ShellHeaderDesktop } from "./ShellHeader";
-import { getSocketEndpoint } from "../lib/getSocketEndpoint";
+import { getSocketEndpoint } from "../../utils/getSocketEndpoint";
 import { useIsMobile } from "../../hooks/useIsMobile";
 import { ChatSidebar } from "../chatSIdebar";
 import { ChatSidebarMobile } from "../chatSIdebar/ChatSidebarMobile";
@@ -13,25 +13,35 @@ export const Shell: React.FC = React.memo(() => {
   const isMobile = useIsMobile(768);
 
   /* --------------------------------------------------------
-    Stable theme toggle
+     🌓 THEME (reactive + persistent)
   -------------------------------------------------------- */
-  const toggleTheme = useCallback(() => {
-    const html = document.documentElement;
-    html.classList.toggle("dark");
-    localStorage.setItem(
-      "theme",
-      html.classList.contains("dark") ? "dark" : "light"
-    );
-  }, []);
 
+  // Read initial theme safely
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    const saved = localStorage.getItem("theme");
+    return saved === "dark" ? "dark" : "light";
+  });
+
+  // Apply theme on mount
   useEffect(() => {
-    if (localStorage.getItem("theme") === "dark") {
+    if (theme === "dark") {
       document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
     }
+  }, [theme]);
+
+  // Toggle theme
+  const toggleTheme = useCallback(() => {
+    setTheme((prev) => {
+      const next = prev === "dark" ? "light" : "dark";
+      localStorage.setItem("theme", next);
+      return next;
+    });
   }, []);
 
   /* --------------------------------------------------------
-    Endpoint switcher
+     🔄 Endpoint switcher
   -------------------------------------------------------- */
   const handleSwap = useCallback(() => {
     const current =
@@ -47,12 +57,13 @@ export const Shell: React.FC = React.memo(() => {
     } catch {
       localStorage.setItem("ws_endpoint", next);
     }
+
     setEndpoint(next);
     window.location.reload();
   }, [endpoint]);
 
   /* --------------------------------------------------------
-    Static navigation (memoized once)
+     🚦 Navigation links
   -------------------------------------------------------- */
   const navLinks = useMemo(
     () => [
@@ -65,7 +76,7 @@ export const Shell: React.FC = React.memo(() => {
   );
 
   /* --------------------------------------------------------
-    Memoized sidebar (prevents re-mounts)
+     📌 Sidebar (memoized to avoid remounts)
   -------------------------------------------------------- */
   const MemoizedSidebar = useMemo(
     () => <ChatSidebar onSelectChat={(id) => console.log("Open chat:", id)} />,
@@ -73,12 +84,12 @@ export const Shell: React.FC = React.memo(() => {
   );
 
   /* --------------------------------------------------------
-   🧩 Layout
+     🧩 Layout
   -------------------------------------------------------- */
   return (
     <div
       className={`
-        flex flex-col min-h-screen
+        flex flex-col h-screen overflow-hidden
         bg-app-bg text-app-text
         dark:bg-app-bg-dark dark:text-app-text-dark
       `}
@@ -86,7 +97,6 @@ export const Shell: React.FC = React.memo(() => {
       {/* Header */}
       {isMobile ? (
         <div className="flex items-center justify-between border-b border-header-border dark:border-header-border-dark bg-header-bg dark:bg-header-bg-dark px-2 py-2">
-          {/* 🟢 Mobile sidebar burger */}
           <ChatSidebarMobile onSelectChat={(id) => console.log("Open chat:", id)} />
         </div>
       ) : (
@@ -96,6 +106,7 @@ export const Shell: React.FC = React.memo(() => {
           endpoint={endpoint}
           onSwap={handleSwap}
           onToggleTheme={toggleTheme}
+          theme={theme}
         />
       )}
 
@@ -109,11 +120,11 @@ export const Shell: React.FC = React.memo(() => {
         )}
 
         {/* Main content */}
-      <main className="flex-1 min-h-0 overflow-y-auto">
-        <Container>
-          <Outlet />   {/* 🔥 WHERE ROUTES GO */}
-        </Container>
-      </main>
+        <main className="flex-1 overflow-hidden flex flex-col">
+          <Container>
+            <Outlet /> {/* Routes render here */}
+          </Container>
+        </main>
       </div>
 
       {/* Footer */}

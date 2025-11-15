@@ -1,30 +1,18 @@
 import React from "react";
-import { SvgIcon } from "../SvgIcon";
+import { Send, Loader2 } from "lucide-react";
 
 export type StatusType = "idle" | "thinking";
 
 interface StatusButtonProps {
   status?: StatusType;
   onClick?: () => void;
-  /** optional overrides if your icon names differ */
-  icons?: {
-    idle?: string;      // default: "petir"
-    thinking?: string;  // default: "loader" (falls back to "petir" if missing)
-  };
 }
 
 export const StatusButton: React.FC<StatusButtonProps> = ({
   status = "idle",
   onClick,
-  icons,
 }) => {
   const isThinking = status === "thinking";
-
-  const idleIcon = icons?.idle ?? "petir";
-  const thinkingIcon = icons?.thinking ?? "loader";
-
-  // if you don't have a "loader" icon, we'll spin the old one
-  const useFallbackSpin = thinkingIcon === "loader" ? false : true;
 
   return (
     <button
@@ -40,12 +28,11 @@ export const StatusButton: React.FC<StatusButtonProps> = ({
       `}
       title={isThinking ? "Generating..." : "Send"}
     >
-      <SvgIcon
-        name={isThinking ? thinkingIcon : idleIcon}
-        size={18}
-        color="currentColor"
-        className={isThinking ? (useFallbackSpin ? "animate-spin" : "") : ""}
-      />
+      {isThinking ? (
+        <Loader2 className="w-4 h-4 animate-spin" />
+      ) : (
+        <Send className="w-4 h-4" />
+      )}
     </button>
   );
 };

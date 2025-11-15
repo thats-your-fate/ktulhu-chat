@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { Container } from "../../ui/Container";
 import { useSocketContext } from "../../../context/SocketProvider";
 import type { Location } from "react-router-dom";
+import { KtulhuLogo } from "../../KtulhuLogo";
+import { Sun, Moon } from "lucide-react";
 
 type ShellHeaderProps = {
   location: Location;
@@ -10,6 +12,7 @@ type ShellHeaderProps = {
   endpoint: string;
   onSwap: () => void;
   onToggleTheme: () => void;
+  theme: "light" | "dark";   // ← 🔥 REQUIRED NOW
 };
 
 export const ShellHeaderDesktop: React.FC<ShellHeaderProps> = ({
@@ -18,6 +21,7 @@ export const ShellHeaderDesktop: React.FC<ShellHeaderProps> = ({
   endpoint,
   onSwap,
   onToggleTheme,
+  theme,
 }) => {
   const { status, lastError } = useSocketContext();
 
@@ -31,56 +35,45 @@ export const ShellHeaderDesktop: React.FC<ShellHeaderProps> = ({
     >
       <Container>
         <div className="flex flex-wrap items-center justify-between py-3 gap-2">
-          {/* Left side — title + status */}
+          {/* Left side — logo + title */}
           <div className="flex items-center gap-3">
-<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 64 64">
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#8b5cf6"/>
-      <stop offset="100%" stop-color="#111111"/>
-    </linearGradient>
-    <clipPath id="r">
-      <rect x="0" y="0" width="64" height="64" rx="12"/>
-    </clipPath>
-  </defs>
-
-  <rect width="64" height="64" fill="none" clip-path="url(#r)"/>
-
-  <path d="M32 12c-9 0-15 6-15 14 0 6 3 10 7 13 2 2 3 4 4 6l1 3a3 3 0 0 0 6 0l1-3c1-2 2-4 4-6 4-3 7-7 7-13 0-8-6-14-15-14z" fill="url(#g)"/>
-  <path d="M18 40c-5 1-8 5-8 9 0 4 4 6 7 5 3-1 5-4 3-7-2-3-5-3-7-1" stroke="url(#g)" stroke-width="2" fill="none" stroke-linecap="round"/>
-  <path d="M46 40c5 1 8 5 8 9 0 4-4 6-7 5-3-1-5-4-3-7 2-3 5-3 7-1" stroke="url(#g)" stroke-width="2" fill="none" stroke-linecap="round"/>
-
-  <circle cx="26" cy="28" r="1.8" fill="#111"/>
-  <circle cx="38" cy="28" r="1.8" fill="#111"/>
-</svg>
-
+            <KtulhuLogo size={30} />
 
             <Link
               to="/"
-              className="text-xl font-bold tracking-tight text-header-title dark:text-header-title-dark"
+              className="
+                text-xl font-bold tracking-tight 
+                text-header-title dark:text-header-title-dark
+              "
             >
               Ktulhu
             </Link>
-
-
           </div>
 
           {/* Right side — nav + controls */}
           <nav className="flex flex-wrap gap-3 text-sm items-center">
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`transition hover:underline ${
-                  location.pathname === link.path
-                    ? "font-semibold text-nav-active dark:text-nav-active-dark"
-                    : "text-nav-inactive hover:text-nav-active dark:text-nav-inactive-dark dark:hover:text-nav-active-dark"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              const isActive = location.pathname === link.path;
 
+              return (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`
+                    px-2 py-1 uppercase transition-colors duration-150
+                    ${
+                      isActive
+                        ? "font-semibold text-black dark:text-white"
+                        : "text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white"
+                    }
+                  `}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+
+            {/* WS Endpoint Button */}
             <button
               onClick={onSwap}
               className={`
@@ -93,6 +86,8 @@ export const ShellHeaderDesktop: React.FC<ShellHeaderProps> = ({
             >
               WS: {endpoint.replace(/^wss?:\/\//, "").slice(0, 22)}…
             </button>
+
+            {/* Connection Status Dot */}
             <div
               className={`
                 w-3 h-3 rounded-full border border-gray-400 transition-colors duration-300
@@ -107,15 +102,22 @@ export const ShellHeaderDesktop: React.FC<ShellHeaderProps> = ({
             {lastError && (
               <span className="text-xs text-red-600 ml-1">{lastError}</span>
             )}
+
+            {/* 🌙 Theme Toggle */}
             <button
               onClick={onToggleTheme}
-              className={`
+              className="
                 bg-transparent ml-1 px-2 py-1 rounded text-xs border transition 
+                border-btn-outline-border 
                 text-btn-outline-text dark:text-btn-outline-text-dark
-              `}
+              "
               title="Toggle dark mode"
             >
-              🌓
+              {theme === "dark" ? (
+                <Sun size={16} className="text-yellow-400" />
+              ) : (
+                <Moon size={16} className="text-gray-700 dark:text-gray-200" />
+              )}
             </button>
           </nav>
         </div>
