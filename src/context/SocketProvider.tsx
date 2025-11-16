@@ -9,6 +9,7 @@ type HandlerSet = {
   onToken?: (t: string) => void;
   onDone?: () => void;
   onAny?: (data: any) => void;
+    onSystem?: (msg: any) => void;
 };
 
 type SocketContextType = {
@@ -67,28 +68,40 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }));
     };
 
-    socket.onmessage = (ev) => {
-      const raw = ev.data;
-      let msg: any;
+socket.onmessage = (ev) => {
+  const raw = ev.data;
+  let msg: any;
 
-      if (typeof raw === "string" && raw[0] !== "{") {
-        for (const h of listeners.current) h.onToken?.(raw);
-        return;
-      }
+  // FIX: accept JSON even if preceded by whitespace/newlines
+  if (typeof raw === "string" && !raw.trim().startsWith("{")) {
+    for (const h of listeners.current) h.onToken?.(raw);
+    return;
+  }
 
-      try {
-        msg = JSON.parse(raw);
-      } catch {
-        console.warn("Bad JSON:", raw);
-        return;
-      }
+  try {
+    msg = JSON.parse(raw);
+  } catch {
+    console.warn("Bad JSON:", raw);
+    return;
+  }
 
-      for (const h of listeners.current) {
-        h.onAny?.(msg);
-        if (msg.token) h.onToken?.(msg.token);
-        if (msg.done) h.onDone?.();
-      }
-    };
+  for (const h of listeners.current) {
+    h.onAny?.(msg);
+
+    if (msg.type === "system") {
+      h.onSystem?.(msg);
+    }
+
+    if (msg.token) {
+      h.onToken?.(msg.token);
+    }
+
+    if (msg.done) {
+      h.onDone?.();
+    }
+  }
+};
+
 
     socket.onerror = () => {
       setStatus("error");

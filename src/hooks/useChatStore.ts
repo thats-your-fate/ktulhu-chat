@@ -38,7 +38,7 @@ function decodeContent(str?: string): string {
 
 
       const msgs = (parsed.messages || [])
-        .filter((m: any) => m.role !== "summary")
+        .filter((m: any) => (m.role !== "summary" && m.role !== "system"))
         .map((m: any, i: number) => ({
           id: m.id ?? `${chatId}-${i}`,
           role: m.role ?? "assistant",

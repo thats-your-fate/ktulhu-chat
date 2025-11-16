@@ -121,3 +121,51 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+
+
+
+/* Lists */
+.model-answer ul, .model-answer ol {
+  @apply pl-6 my-4 space-y-1;
+}
+
+/* List markers */
+.model-answer ul li {
+  @apply list-disc;
+}
+.model-answer ol li {
+  @apply list-decimal;
+}
+
+/* Headings */
+.model-answer h1, 
+.model-answer h2,
+.model-answer h3 {
+  @apply font-semibold text-gray-900 dark:text-gray-50 mt-6 mb-3;
+}
+
+/* Horizontal rule */
+.model-answer hr {
+  @apply border-gray-300 dark:border-gray-700 my-6;
+}
+
+/* Links */
+.model-answer a {
+  @apply text-blue-600 dark:text-blue-400 underline hover:no-underline;
+}
+
+/* Paragraph spacing */
+.model-answer p {
+  @apply my-3;
+}
+
+/* Bold text */
+.model-answer strong {
+  @apply font-semibold text-gray-900 dark:text-gray-50;
+}
+
+/* Indented block sections */
+.model-answer blockquote {
+  @apply border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic text-gray-600 dark:text-gray-300;
+}

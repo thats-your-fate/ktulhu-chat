@@ -11,6 +11,9 @@ import { useChatStore } from "../../hooks/useChatStore";
 import { useSocketContext } from "../../context/SocketProvider";
 import { useSession } from "../../context/SessionContext";
 
+import { SystemStatusBanner } from "../../components/SystemStatusBanner";
+
+
 const DEFAULT_MODEL = "mistral-7b-lora";
 
 export default function ChatComponent() {
@@ -21,6 +24,7 @@ export default function ChatComponent() {
   const [isSending, setIsSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
+const [liveStatus, setLiveStatus] = useState(null);  
   const { sendPrompt, addHandlers } = useSocketContext();
 
   /* ---------------------- Auto-Scroll on new msg ---------------------- */
@@ -35,23 +39,43 @@ export default function ChatComponent() {
   useEffect(() => {
     let assistantId: string | null = null;
 
-    const remove = addHandlers({
-      onAny: (msg) => {
-        if (msg.token && !assistantId) {
-          assistantId = uuidv4();
-          add({ id: assistantId, role: "assistant", content: "", ts: Date.now() });
-        }
-      },
+const remove = addHandlers({
+  onAny: (msg) => {
+    // Ignore done messages entirely (prevents "Done." ghost)
+    if (msg.done) return;
 
-      onToken: (token) => {
-        if (assistantId) patch(assistantId, token);
-      },
+    // Token bootstrap (JSON only)
+    if (msg.type === "token" && !assistantId) {
+      assistantId = uuidv4();
+      add({ id: assistantId, role: "assistant", content: "", ts: Date.now() });
+    }
+  },
 
-      onDone: () => {
-        setIsSending(false);
-        assistantId = null;
-      },
-    });
+  onSystem: (msg) => {
+    console.log("SYSTEM MSG:", msg);
+    setLiveStatus(msg.system || msg.message); // supports both fields
+  },
+
+  onToken: (token) => {
+    // ALWAYS clear status when tokens start (raw or JSON)
+    setLiveStatus(null);
+
+    if (!assistantId) {
+      assistantId = uuidv4();
+      add({ id: assistantId, role: "assistant", content: "", ts: Date.now() });
+    }
+
+    patch(assistantId, token);
+  },
+
+  onDone: () => {
+    setIsSending(false);
+    setLiveStatus(null);
+    assistantId = null;
+  },
+});
+
+
 
     return () => remove?.();
   }, [add, patch, addHandlers]);
@@ -91,6 +115,7 @@ export default function ChatComponent() {
           className="flex-1 overflow-y-auto pb-[120px]"
         >
           <MessageList history={history} />
+            <SystemStatusBanner text={liveStatus} />
         </PannelBody>
 
         {/* Input footer */}
