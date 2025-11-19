@@ -17,18 +17,22 @@ interface MessageListProps {
  * Uses stable keys and minimal re-renders.
  */
 export const MessageList: React.FC<MessageListProps> = ({ history }) => {
-  if (!history?.length) {
-    return (
-      <div className="flex flex-col items-center justify-center flex-1 min-h-0 select-none overflow-hidden">
-        <div className="text-center text-gray-500 dark:text-gray-400">
-          <p className="text-base font-medium mb-1">Start a conversation</p>
-          <p className="text-sm opacity-75">
-            Your messages stay in this browser only.
-          </p>
-        </div>
-      </div>
-    );
-  }
+if (!history?.length) {
+  return (
+    <div className="flex flex-col flex-1 items-center justify-center text-center select-none px-6">
+
+      <p className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-1">
+        What’s on your mind?
+      </p>
+
+      <p className="text-base text-gray-500 dark:text-gray-400 opacity-80">
+        Ask Ktulhu AI Chat.
+      </p>
+
+    </div>
+  );
+}
+
 
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden">

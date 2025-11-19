@@ -13,7 +13,7 @@ export const Shell: React.FC = React.memo(() => {
   const isMobile = useIsMobile(768);
 
   /* --------------------------------------------------------
-     🌓 THEME (reactive + persistent)
+      THEME (reactive + persistent)
   -------------------------------------------------------- */
 
   // Read initial theme safely
@@ -41,7 +41,7 @@ export const Shell: React.FC = React.memo(() => {
   }, []);
 
   /* --------------------------------------------------------
-     🔄 Endpoint switcher
+      Endpoint switcher
   -------------------------------------------------------- */
   const handleSwap = useCallback(() => {
     const current =
@@ -69,14 +69,14 @@ export const Shell: React.FC = React.memo(() => {
     () => [
       { path: "/", label: "Chat" },
       { path: "/settings", label: "Settings" },
-      { path: "/about", label: "About" },
+      { path: "https://about.ktulhu.com", label: "About" },
       { path: "/logs", label: "Logs" },
     ],
     []
   );
 
   /* --------------------------------------------------------
-     📌 Sidebar (memoized to avoid remounts)
+      Sidebar (memoized to avoid remounts)
   -------------------------------------------------------- */
   const MemoizedSidebar = useMemo(
     () => <ChatSidebar onSelectChat={(id) => console.log("Open chat:", id)} />,
@@ -84,7 +84,7 @@ export const Shell: React.FC = React.memo(() => {
   );
 
   /* --------------------------------------------------------
-     🧩 Layout
+      Layout
   -------------------------------------------------------- */
   return (
     <div

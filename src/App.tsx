@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import ChatPage from "./pages/ChatComponent/Index";
+import ChatPage from "./pages/ChatComponent/ChatPage";
 import { Shell } from "./components/shell";
 import { SocketProvider } from "./context/SocketProvider";
 import { SessionProvider } from "./context/SessionContext";
@@ -9,15 +9,15 @@ import { ChatStoreProvider } from "./context/ChatStoreContext";
 export default function App() {
   return (
     <BrowserRouter>
-      {/* GLOBAL DEFAULT SEO */}
       <Seo />
 
       <SessionProvider>
-        {/* ⬇️ ADD IT HERE */}
         <ChatStoreProvider>
           <SocketProvider>
             <Routes>
               <Route element={<Shell />}>
+
+                {/* Default home — NEW CHAT */}
                 <Route
                   path="/"
                   element={
@@ -28,6 +28,22 @@ export default function App() {
                   }
                 />
 
+                {/* EXISTING CHAT THREAD */}
+                <Route
+                  path="/chat/:chatId"
+                  element={
+                    <>
+                      <Seo
+                        path="/chat"
+                        title="Chat Thread"
+                        description="Continue your Ktulhu chat conversation."
+                      />
+                      <ChatPage />
+                    </>
+                  }
+                />
+
+                {/* SETTINGS */}
                 <Route
                   path="/settings"
                   element={
@@ -35,13 +51,13 @@ export default function App() {
                       <Seo
                         path="/settings"
                         title="Ktulhu Settings"
-                        description="Configure your Ktulhu AI chat experience, websocket endpoint, and preferences."
                       />
                       <div>Settings</div>
                     </>
                   }
                 />
 
+                {/* ABOUT */}
                 <Route
                   path="/about"
                   element={
@@ -49,13 +65,13 @@ export default function App() {
                       <Seo
                         path="/about"
                         title="About Ktulhu"
-                        description="Learn more about Ktulhu — the private, independent AI assistant built for freedom, speed, and control."
                       />
                       <div>About</div>
                     </>
                   }
                 />
 
+                {/* LOGS */}
                 <Route
                   path="/logs"
                   element={
@@ -63,17 +79,16 @@ export default function App() {
                       <Seo
                         path="/logs"
                         title="Inference Logs"
-                        description="Inspect your inference logs, system events, and WebSocket activity inside Ktulhu."
                       />
                       <div>Logs</div>
                     </>
                   }
                 />
+
               </Route>
             </Routes>
           </SocketProvider>
         </ChatStoreProvider>
-        {/* ⬆️ STOP HERE */}
       </SessionProvider>
     </BrowserRouter>
   );

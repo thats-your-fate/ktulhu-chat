@@ -15,8 +15,11 @@ interface UseChatSummariesOptions {
 /* ---------------------------------------------------
   Shared global reactive store
 --------------------------------------------------- */
+
 let globalChats: ChatSummary[] = [];
 const subscribers = new Set<React.Dispatch<React.SetStateAction<ChatSummary[]>>>();
+
+
 
 function notifyAll() {
   for (const set of subscribers) set([...globalChats]);
@@ -56,6 +59,9 @@ export function useChatSummaries({
       subscribers.delete(setChats);
     };
   }, []);
+
+
+
 
   /* ---------------------------------------------------
     State helpers

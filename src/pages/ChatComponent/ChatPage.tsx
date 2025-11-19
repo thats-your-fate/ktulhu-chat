@@ -110,13 +110,31 @@ const remove = addHandlers({
   return (
     <Container className="h-[calc(100vh-6rem)] flex justify-center">
       <Pannel className="flex flex-col w-full h-full relative overflow-hidden">
-        <PannelBody
-          ref={scrollRef as any}
-          className="flex-1 overflow-y-auto pb-[120px]"
-        >
-          <MessageList history={history} />
-            <SystemStatusBanner text={liveStatus} />
-        </PannelBody>
+<PannelBody
+  ref={scrollRef as any}
+  className="flex-1 overflow-y-auto pb-[120px] relative"
+>
+  {(!history || history.length === 0) ? (
+    <div className="absolute inset-0 flex flex-col items-center justify-center text-center select-none px-6">
+
+      <p className="text-4xl font-semibold text-gray-700 dark:text-gray-200 mb-5">
+        What’s on your mind?
+      </p>
+
+      <p className="text-2xl text-gray-500 dark:text-gray-400 opacity-80">
+        Ask Ktulhu AI Chat.
+      </p>
+
+    </div>
+  ) : (
+    <>
+      <MessageList history={history} />
+    </>
+  )}
+
+  <SystemStatusBanner text={liveStatus} />
+</PannelBody>
+
 
         {/* Input footer */}
         <div className="absolute bottom-0 left-0 right-0 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 px-4 py-3">

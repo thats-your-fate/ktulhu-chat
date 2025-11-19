@@ -1,27 +1,42 @@
 // ChatSidebarMobile.tsx
 import React, { useState } from "react";
 import { Menu, X } from "lucide-react";
+
 import { useSession } from "../../context/SessionContext";
 import { useChatSummaries } from "../../hooks/useChatSummaries";
 import { ChatList } from "./ChatList";
+
+import { deleteChatThread, createNewChat } from "./utils/chatActions";
 
 export const ChatSidebarMobile: React.FC<{ onSelectChat?: (id: string) => void }> = ({
   onSelectChat,
 }) => {
   const { chatId, setChatId } = useSession();
-  const { chats, upsert } = useChatSummaries();
+  const { chats, upsert, remove } = useChatSummaries();
   const [isOpen, setIsOpen] = useState(false);
 
+  /* ----------------------------
+        SELECT CHAT
+  -----------------------------*/
   const handleSelectChat = (id: string) => {
     setChatId(id);
     onSelectChat?.(id);
-    setIsOpen(false);
+    setIsOpen(false); // close drawer
   };
 
+  /* ----------------------------
+        CREATE NEW CHAT
+  -----------------------------*/
   const handleNewChat = () => {
-    const id = crypto.randomUUID();
-    upsert({ chat_id: id, summary: "New chat", ts: Date.now() });
+    const id = createNewChat({ upsert });
     handleSelectChat(id);
+  };
+
+  /* ----------------------------
+        DELETE CHAT
+  -----------------------------*/
+  const handleDeleteChat = (id: string) => {
+    deleteChatThread(id, { remove });
   };
 
   return (
@@ -49,6 +64,7 @@ export const ChatSidebarMobile: React.FC<{ onSelectChat?: (id: string) => void }
               chatId={chatId}
               onSelectChat={handleSelectChat}
               onNewChat={handleNewChat}
+              onDeleteChat={handleDeleteChat}
             />
           </aside>
         </div>

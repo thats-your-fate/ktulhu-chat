@@ -8,7 +8,9 @@ export const ChatList: React.FC<{
   chatId: string;
   onSelectChat: (id: string) => void;
   onNewChat: () => void;
-}> = ({ chats, chatId, onSelectChat, onNewChat }) => {
+  onDeleteChat: (id: string) => void;   // <-- ADD THIS
+}> = ({ chats, chatId, onSelectChat, onNewChat, onDeleteChat }) => {
+
   return (
     <div className="flex flex-col h-full">
       {/* New Chat button */}
@@ -32,8 +34,9 @@ export const ChatList: React.FC<{
             <ChatListItem
               key={chat.chat_id}
               chat={chat}
-              onSelect={onSelectChat}
-              isActive={chat.chat_id === chatId}
+            isActive={chat.chat_id === chatId}
+            onSelect={() => onSelectChat(chat.chat_id)}
+            onDelete={() => onDeleteChat(chat.chat_id)}
             />
           ))
         )}
