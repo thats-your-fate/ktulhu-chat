@@ -5,6 +5,8 @@ import { SocketProvider } from "./context/SocketProvider";
 import { SessionProvider } from "./context/SessionContext";
 import { Seo } from "./components/Seo";
 import { ChatStoreProvider } from "./context/ChatStoreContext";
+import { LogsPage } from "./pages/logsPage/logsPage";
+
 
 export default function App() {
   return (
@@ -80,7 +82,7 @@ export default function App() {
                         path="/logs"
                         title="Inference Logs"
                       />
-                      <div>Logs</div>
+                      <LogsPage/>
                     </>
                   }
                 />

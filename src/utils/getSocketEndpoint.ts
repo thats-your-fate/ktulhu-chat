@@ -8,12 +8,8 @@ export function getSocketEndpoint(): string {
     const session = window.sessionStorage.getItem("ws_endpoint");
     if (session && session.trim()) return normalizeToWs(session);
 
-    // 2️⃣ Optional: localStorage override (if still needed)
-    // const manual = window.localStorage.getItem("ws_endpoint");
-    // if (manual && manual.trim()) return normalizeToWs(manual);
   }
 
-  // 3️⃣ Environment variables (Cloudflare tunnel or direct WS base URL)
   const env = (import.meta as any)?.env || {};
   const tunnel = env.VITE_TUNNEL_URL as string | undefined;
   const webSockBase = env.VITE_WEB_SOCK_BASE_URL as string | undefined;
@@ -21,7 +17,7 @@ export function getSocketEndpoint(): string {
   if (webSockBase && webSockBase.trim()) return normalizeToWs(webSockBase);
   if (tunnel && tunnel.trim()) return normalizeToWs(tunnel);
 
-  // 4️⃣ Final fallback (default)
+
   return "wss://inference.ktulhu.com";
 }
 
